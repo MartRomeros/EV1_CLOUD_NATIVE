@@ -18,7 +18,9 @@ npm install
 1. Entra a [portal.azure.com](https://portal.azure.com) → **Microsoft Entra ID** → **App registrations** → **New registration**.
 2. **Name**: `ev1-cloud-native-frontend` (o el que prefieras).
 3. **Supported account types**: "Accounts in this organizational directory only" (single tenant), salvo que necesiten multi-tenant.
-4. **Redirect URI**: selecciona plataforma **Single-page application (SPA)** y pon `http://localhost:5173` (agrega luego la URL de produccion cuando la tengan).
+4. **Redirect URI**: selecciona plataforma **Single-page application (SPA)** y agrega **dos**:
+   - `http://localhost:5173` (desarrollo local)
+   - `https://martin-romero.cl/cloud` (produccion — ver seccion de Deploy mas abajo)
 5. Click **Register**.
 6. En la pagina **Overview** del App Registration, copia:
    - **Application (client) ID** → `VITE_AZURE_CLIENT_ID`
@@ -83,6 +85,26 @@ src/
     Items.tsx             # CRUD simple: listar, crear, editar, eliminar
   types/item.ts          # Tipos del recurso CRUD (ejemplo generico)
 ```
+
+## Deploy (FTP a cPanel)
+
+Este frontend esta pensado para subirse por **FTP** a un hosting **cPanel**, en el subdirectorio `/cloud` del dominio: `https://martin-romero.cl/cloud`.
+
+Por eso:
+
+- `vite.config.ts` tiene `base: '/cloud/'` — para que los assets (`/cloud/assets/...`) resuelvan bien dentro del subdirectorio.
+- `main.tsx` usa `<BrowserRouter basename="/cloud">` — para que las rutas de React Router coincidan.
+- `public/.htaccess` se copia tal cual a `dist/` en el build; en cPanel (Apache) reescribe cualquier ruta que no sea un archivo/carpeta real (ej. `/cloud/items`) hacia `index.html`, para que el router de React la resuelva en el navegador. Sin este archivo, recargar la pagina en una ruta distinta a `/cloud` da 404.
+
+Pasos:
+
+1. Completa `.env` con `VITE_AZURE_REDIRECT_URI=https://martin-romero.cl/cloud` y el resto de variables de produccion.
+2. Genera el build:
+   ```bash
+   npm run build
+   ```
+3. Sube **el contenido** de la carpeta `dist/` (incluyendo `.htaccess`, que es un archivo oculto — asegurate que tu cliente FTP muestre archivos ocultos) a la carpeta `cloud` dentro del `public_html` del cPanel.
+4. Verifica en el navegador que `https://martin-romero.cl/cloud` cargue el login y que navegar a `https://martin-romero.cl/cloud/items` directamente (o recargar ahi) tambien funcione, gracias al `.htaccess`.
 
 ## Notas sobre el CRUD de ejemplo
 

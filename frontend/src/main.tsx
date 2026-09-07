@@ -31,7 +31,8 @@ async function bootstrap() {
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <MsalProvider instance={msalInstance}>
-        <BrowserRouter>
+        {/* basename coincide con el subdirectorio de despliegue en cPanel (base en vite.config.ts) */}
+        <BrowserRouter basename="/cloud">
           <App />
         </BrowserRouter>
       </MsalProvider>
