@@ -1,0 +1,26 @@
+# --- AWS Academy (Learner Lab) -------------------------------------------------
+#  1. Panel del lab -> "AWS Details" -> "AWS CLI": copia el bloque de credenciales
+#     en ~/.aws/credentials bajo el perfil [default]. Se renuevan cada sesión.
+#  2. La región del lab suele estar fijada a us-east-1.
+#  3. No definas aws_profile salvo que hayas creado un perfil con ese nombre.
+#  4. LabRole es el único rol disponible; ecr_grant_lab_role le da push/pull.
+#  5. No se pueden crear claves KMS de cliente: deja el cifrado en AES256.
+# -----------------------------------------------------------------------------
+
+aws_region  = "us-east-1"
+project     = "ev1-cloud"
+environment = "lab"
+
+ecr_grant_lab_role = true
+
+ecr_repositories = {
+  api = {
+    force_delete = true # entorno efímero: permite destruir con imágenes dentro
+  }
+
+  worker = {
+    force_delete         = true
+    max_image_count      = 20
+    untagged_expiry_days = 7
+  }
+}
