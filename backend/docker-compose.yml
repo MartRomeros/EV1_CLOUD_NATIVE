@@ -9,7 +9,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=PossGAdmin
       - POSTGRES_DB=DB_CLOUD
-      - POSTGRES_HOST=host.docker.internal
+      - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
 
   db:
