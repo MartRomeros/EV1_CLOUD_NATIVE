@@ -1,0 +1,23 @@
+<div class="login-page">
+  <div class="login-banner">
+    <div class="login-banner-half">
+      <img src="imagenes/portada.png" alt="Servicio mecánico integral" />
+    </div>
+    <div class="login-banner-half">
+      <img src="imagenes/portada2.png" alt="Taller mecánico de alto nivel" />
+    </div>
+  </div>
+
+  <div class="login-panel">
+    <div class="login-card">
+      <h1>Iniciar sesión</h1>
+      <p>Accede con tu cuenta corporativa (Azure Entra ID).</p>
+      @if (error) {
+        <p class="login-error">{{ error }}</p>
+      }
+      <button type="button" (click)="login()" [disabled]="loginInProgress">
+        {{ loginInProgress ? 'Redirigiendo...' : 'Iniciar sesión con Microsoft' }}
+      </button>
+    </div>
+  </div>
+</div>

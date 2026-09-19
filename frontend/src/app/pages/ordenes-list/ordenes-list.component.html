@@ -1,0 +1,50 @@
+<div class="ordenes-page">
+  <div class="ordenes-header">
+    <h1>Órdenes de trabajo</h1>
+    <a class="btn-primary" routerLink="/ordenes/nueva">Nueva orden</a>
+  </div>
+
+  @if (error) {
+    <p class="ordenes-error">{{ error }}</p>
+  }
+
+  @if (loading) {
+    <p>Cargando...</p>
+  } @else {
+    <table class="ordenes-table">
+      <thead>
+        <tr>
+          <th>OT</th>
+          <th>Cliente</th>
+          <th>Patente</th>
+          <th>Descripción</th>
+          <th>Ítems</th>
+          <th>Total</th>
+          <th>Creada</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (orden of ordenes; track orden.otId) {
+          <tr>
+            <td><a [routerLink]="['/ordenes', orden.otId]">{{ orden.otId }}</a></td>
+            <td>{{ orden.clienteId }}</td>
+            <td>{{ orden.patente }}</td>
+            <td>{{ orden.descripcion }}</td>
+            <td>{{ orden.nItems }}</td>
+            <td>$ {{ orden.total | number: '1.0-0' }}</td>
+            <td>{{ orden.createdAt | date: 'short' }}</td>
+            <td class="ordenes-actions">
+              <button type="button" (click)="handleDelete(orden.otId)">Eliminar</button>
+            </td>
+          </tr>
+        }
+        @if (ordenes.length === 0) {
+          <tr>
+            <td colspan="8">No hay órdenes de trabajo todavía.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

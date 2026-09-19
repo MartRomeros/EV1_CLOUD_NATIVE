@@ -1,18 +1,7 @@
-# Deploy: FTP a cPanel, carpeta /cloud -> https://martin-romero.cl/cloud
-# Hace que las rutas de React Router (BrowserRouter) funcionen al recargar
-# o entrar directo a una URL como /cloud/items, sirviendo siempre index.html
-# cuando el archivo/carpeta pedido no existe fisicamente.
-
-RewriteEngine On
-RewriteBase /cloud/
-
-# No reescribir archivos ni carpetas que si existen (assets, favicon, etc.)
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
-
-# Todo lo demas va a index.html para que React Router resuelva la ruta
-RewriteRule ^ index.html [L]
-
-# Evitar que se liste el contenido de carpetas
-Options -Indexes
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /cloud/
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /cloud/index.html [L]
+</IfModule>

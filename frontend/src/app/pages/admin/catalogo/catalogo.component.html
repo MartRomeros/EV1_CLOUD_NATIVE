@@ -1,0 +1,63 @@
+<div class="admin-page">
+  <h1>Catálogo de servicios y precios</h1>
+
+  <form class="admin-form" (ngSubmit)="handleSubmit()">
+    <input
+      type="text"
+      placeholder="Concepto (ej. MO-HH)"
+      [(ngModel)]="form.concepto"
+      name="concepto"
+      [disabled]="!!editingConcepto"
+      required
+    />
+    <input type="text" placeholder="Descripción" [(ngModel)]="form.descripcion" name="descripcion" required />
+    <input type="number" placeholder="Precio unitario" min="0" [(ngModel)]="form.precioUnit" name="precioUnit" required />
+    <select [(ngModel)]="form.categoria" name="categoria">
+      <option value="mano_obra">Mano de obra</option>
+      <option value="repuesto">Repuesto</option>
+    </select>
+    <button type="submit">{{ editingConcepto ? 'Actualizar' : 'Crear' }}</button>
+    @if (editingConcepto) {
+      <button type="button" (click)="handleCancelEdit()">Cancelar</button>
+    }
+  </form>
+
+  @if (error) {
+    <p class="admin-error">{{ error }}</p>
+  }
+
+  @if (loading) {
+    <p>Cargando...</p>
+  } @else {
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Concepto</th>
+          <th>Descripción</th>
+          <th>Precio unitario</th>
+          <th>Categoría</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (servicio of catalogo; track servicio.concepto) {
+          <tr>
+            <td>{{ servicio.concepto }}</td>
+            <td>{{ servicio.descripcion }}</td>
+            <td>$ {{ servicio.precioUnit | number: '1.0-0' }}</td>
+            <td>{{ servicio.categoria === 'mano_obra' ? 'Mano de obra' : 'Repuesto' }}</td>
+            <td class="admin-actions">
+              <button type="button" (click)="handleEdit(servicio)">Editar</button>
+              <button type="button" (click)="handleDelete(servicio.concepto)">Eliminar</button>
+            </td>
+          </tr>
+        }
+        @if (catalogo.length === 0) {
+          <tr>
+            <td colspan="5">No hay servicios todavía.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

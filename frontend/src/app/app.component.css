@@ -1,0 +1,84 @@
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.layout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #1b1f3b;
+  color: #fff;
+}
+
+.layout-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.layout-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+.layout-roles {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  font-size: 0.8rem;
+}
+
+.layout-user button {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+}
+
+.layout-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.75rem 2rem;
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.layout-nav a {
+  color: #475569;
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 0.3rem 0;
+}
+
+.layout-nav a.active {
+  color: #0f6cbd;
+  font-weight: 600;
+  border-bottom: 2px solid #0f6cbd;
+}
+
+.layout-nav-group {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+}
+
+.layout-content {
+  flex: 1;
+  padding: 2rem;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+app-login {
+  display: flex;
+  flex: 1;
+}

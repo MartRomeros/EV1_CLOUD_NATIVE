@@ -1,0 +1,47 @@
+<div class="orden-form-page">
+  <h1>Nueva orden de trabajo</h1>
+
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="handleSubmit()">
+    <div class="header-fields">
+      <label>
+        Cliente
+        <input type="text" formControlName="clienteId" placeholder="CLI-001" />
+      </label>
+      <label>
+        Patente
+        <input type="text" formControlName="patente" placeholder="XXYY11" />
+      </label>
+      <label class="descripcion-field">
+        Descripción
+        <input type="text" formControlName="descripcion" placeholder="Mantención 10k" />
+      </label>
+    </div>
+
+    <h2>Ítems</h2>
+    <div formArrayName="items" class="items-editor">
+      @for (item of items.controls; track item; let i = $index) {
+        <div class="item-row" [formGroupName]="i">
+          <input type="text" formControlName="concepto" placeholder="Concepto (ej. MO-HH)" />
+          <input type="number" formControlName="cantidad" min="0.01" step="0.01" placeholder="Cantidad" />
+          <input type="number" formControlName="precioUnit" min="0" step="1" placeholder="Precio unitario" />
+          <span class="item-subtotal">$ {{ subtotal(i) | number: '1.0-0' }}</span>
+          <button type="button" (click)="removeItem(i)" [disabled]="items.length === 1">Quitar</button>
+        </div>
+      }
+    </div>
+    <button type="button" class="btn-secondary" (click)="addItem()">Agregar ítem</button>
+
+    <div class="orden-total">Total: $ {{ total | number: '1.0-0' }}</div>
+
+    <div class="form-actions">
+      <a routerLink="/ordenes">Cancelar</a>
+      <button type="submit" [disabled]="submitting">
+        {{ submitting ? 'Guardando...' : 'Crear orden' }}
+      </button>
+    </div>
+  </form>
+</div>
