@@ -1,73 +1,100 @@
-# Backend - API REST con Node.js y PostgreSQL
+# Backend - API REST con Node.js y PostgreSQL (TallerPro360)
 
-Este proyecto es una API RESTful desarrollada con Node.js y Express que implementa un CRUD (Crear, Leer, Actualizar, Eliminar) para administrar usuarios. Los datos se almacenan en una base de datos PostgreSQL, y la aplicación está preparada para ser ejecutada mediante contenedores Docker, conectándose a una base de datos externa (local).
+Este proyecto es una API RESTful desarrollada con Node.js y Express que implementa un sistema para la gestión de **Órdenes de Trabajo (OT)**. El modelo de datos está basado en el script SQL original de TallerPro360. 
 
-## 🚀 Características principales
+Los datos se almacenan en una base de datos PostgreSQL y la aplicación está preparada para ser ejecutada mediante contenedores Docker, conectándose al esquema `tallerpro360`.
+
+## 🚀 Características principales y Actualizaciones Recientes
 - **Servidor Web:** Node.js usando el framework [Express.js](https://expressjs.com/).
 - **Base de Datos:** PostgreSQL 15, conectada usando el paquete `pg` hacia la base de datos `DB_CLOUD`.
-- **Contenerización:** Orquestación utilizando Docker Compose para garantizar que la aplicación se ejecute en un contenedor y se comunique con el motor PostgreSQL del host (`host.docker.internal`).
+- **Esquema Personalizado:** La aplicación fue configurada para apuntar al esquema `tallerpro360` de forma predeterminada mediante el parámetro `search_path`.
+- **Eventos y Logs:** Simulación del registro de eventos en la base de datos (`OT_EVENT`) cuando se crea una nueva orden.
+- **Contenerización:** Orquestación utilizando Docker Compose (`docker-compose up -d --build`).
 
-## 📋 Estructura de la Tabla `usuario`
+## 📋 Estructura de Datos Principal
 
-| Campo      | Tipo         | Descripción                                     |
-|------------|--------------|-------------------------------------------------|
-| `id`       | INTEGER      | Clave primaria numérica autoincrementable       |
-| `nombre`   | VARCHAR(100) | Nombre del usuario                              |
-| `apellido` | VARCHAR(100) | Apellido del usuario                            |
-| `email`    | VARCHAR(100) | Correo electrónico (único)                      |
-| `password` | VARCHAR(100) | Contraseña (texto plano, en un caso real se encriptaría) |
+El backend interactúa principalmente con las siguientes tablas del esquema `tallerpro360`:
+- `OT`: Almacena la cabecera de las Órdenes de Trabajo (ID, cliente, patente, descripción, total).
+- `OT_ITEM`: Detalles o ítems asociados a cada OT (concepto, cantidad, precio unitario, subtotal calculado).
+- `OT_EVENT`: Registro histórico de eventos (ej. evento `OtCreada`).
+- `NOTIFY_LOG`: Registro de notificaciones enviadas a clientes.
 
 ## 🛠️ Requisitos
 - **Docker** y **Docker Compose** instalados en tu computadora.
-- **PostgreSQL** corriendo en tu máquina (`localhost:5432`) con una base de datos llamada `DB_CLOUD`, usuario `postgres` y contraseña `PossGAdmin`.
+- **PostgreSQL** corriendo y la base de datos `DB_CLOUD` inicializada (el backend levanta las tablas en su inicialización si no existen, buscando primero en el esquema `tallerpro360`).
 
 ## ⚙️ Instrucciones de Ejecución
 
 Para levantar el backend, abre una terminal en la raíz de esta carpeta (`Back/`) y ejecuta el siguiente comando:
 
 ```bash
-docker-compose up -d --build app
+docker-compose up -d --build
 ```
 
-Esto hará lo siguiente:
-1. Descargará las imágenes base necesarias (Node.js).
-2. Instalará las dependencias de Node.js (`express`, `pg`).
-3. Levantará el servidor en el puerto **8085**.
-4. Se conectará a la base de datos PostgreSQL existente de tu máquina anfitriona.
-
-Para detener el servidor:
-```bash
-docker-compose down
-```
+Esto levantará el servidor en el puerto **8085** y se conectará automáticamente a la base de datos PostgreSQL.
 
 ## 🌐 Endpoints (Rutas de la API)
 
 La URL base de la aplicación una vez levantada es: `http://localhost:8085`
 
-### 1. Crear un usuario (Create)
-- **Ruta:** `POST /usuario`
+### Órdenes de Trabajo (OT)
+
+#### 1. Crear una Orden de Trabajo (Create)
+- **Ruta:** `POST /ot`
 - **Body (JSON):**
   ```json
   {
-    "nombre": "Juan",
-    "apellido": "Pérez",
-    "email": "juan.perez@example.com",
-    "password": "mypassword123"
+    "cliente_id": "CLI-001",
+    "patente": "XXYY11",
+    "descripcion": "Mantención 10k",
+    "total": 62000
+  }
+  ```
+- *Nota: Esto automáticamente generará el evento "OtCreada" en la tabla `OT_EVENT`.*
+
+#### 2. Obtener todas las Órdenes (Read All)
+- **Ruta:** `GET /ot`
+- **Respuesta:** Retorna una lista con todas las órdenes ordenadas por fecha de creación.
+
+#### 3. Obtener una Orden Específica (Read One)
+- **Ruta:** `GET /ot/:id`
+- **Ejemplo:** `GET /ot/OT-2026-000001`
+
+#### 4. Actualizar una Orden (Update)
+- **Ruta:** `PUT /ot/:id`
+- **Body (JSON):**
+  ```json
+  {
+    "cliente_id": "CLI-001",
+    "patente": "XXYY11",
+    "descripcion": "Cambio de pastillas",
+    "total": 85000
   }
   ```
 
-### 2. Obtener todos los usuarios (Read All)
-- **Ruta:** `GET /usuario`
-- **Respuesta:** Retorna una lista con todos los usuarios registrados.
+#### 5. Eliminar una Orden (Delete)
+- **Ruta:** `DELETE /ot/:id`
 
-### 3. Obtener un usuario específico (Read One)
-- **Ruta:** `GET /usuario/:id`
-- **Respuesta:** Retorna los detalles del usuario asociado a ese ID en particular.
+### Ítems de la Orden (OT_ITEM)
 
-### 4. Actualizar un usuario (Update)
-- **Ruta:** `PUT /usuario/:id`
-- **Body (JSON):** Todos los campos a actualizar (nombre, apellido, email, password).
+#### 6. Agregar un Ítem a una Orden
+- **Ruta:** `POST /ot/:id/items`
+- **Body (JSON):**
+  ```json
+  {
+    "concepto": "Filtro de Aceite",
+    "cantidad": 1,
+    "precio_unit": 12000
+  }
+  ```
 
-### 5. Eliminar un usuario (Delete)
-- **Ruta:** `DELETE /usuario/:id`
-- **Respuesta:** Borra el usuario asociado a ese ID de la base de datos.
+#### 7. Obtener los Ítems de una Orden
+- **Ruta:** `GET /ot/:id/items`
+- **Ejemplo:** `GET /ot/OT-2026-000001/items`
+- **Respuesta:** Devuelve todos los ítems asociados a la OT solicitada.
+
+### Resumen y Vistas
+
+#### 8. Obtener Vista de Resumen
+- **Ruta:** `GET /resumen`
+- **Respuesta:** Devuelve un resumen consolidado de las órdenes (emulando la vista `V_OT_RESUMEN`), incluyendo la cuenta de ítems (`N_ITEMS`) y el cálculo de subtotales sumados (`SUBTOTAL_CALC`).
