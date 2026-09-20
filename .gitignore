@@ -36,5 +36,8 @@ db_data/
 *.sln
 *.sw?
 
-# Archivos temporales o basura generada por el usuario (opcional, remueve si necesitas subir el txt)
-# Nuevo documento de texto.txt
+# Otras herramientas
+.claude/
+CLAUDE.md
+AGENTS.md
+.agents/

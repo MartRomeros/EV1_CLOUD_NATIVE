@@ -1,0 +1,82 @@
+<div class="modal-header">
+  <h2 class="modal-title h5">Nuevo pedido</h2>
+  <button type="button" class="btn-close" (click)="activeModal.dismiss()" aria-label="Cerrar"></button>
+</div>
+
+<div class="modal-body">
+  <div class="mb-3">
+    <label for="sucursal" class="form-label">Sucursal</label>
+    <select id="sucursal" class="form-select" [ngModel]="sucursalId()" (ngModelChange)="sucursalId.set($event)">
+      <option [ngValue]="null" disabled>Selecciona una sucursal</option>
+      @for (sucursal of catalogo.sucursales(); track sucursal.id) {
+        <option [ngValue]="sucursal.id">{{ sucursal.nombre }}</option>
+      }
+    </select>
+    @if (sinSucursal()) {
+      <div class="form-text text-danger">Debes seleccionar una sucursal.</div>
+    }
+  </div>
+
+  <table class="table align-middle">
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th style="width: 120px">Cantidad</th>
+        <th class="text-end">Subtotal</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (linea of lineas(); track $index; let i = $index) {
+        <tr>
+          <td>
+            <select
+              class="form-select"
+              [ngModel]="linea.productoId"
+              (ngModelChange)="actualizarLinea(i, { productoId: $event })"
+            >
+              @for (producto of catalogo.productos(); track producto.id) {
+                <option [ngValue]="producto.id">{{ producto.nombre }}</option>
+              }
+            </select>
+          </td>
+          <td>
+            <input
+              type="number"
+              class="form-control"
+              min="1"
+              [ngModel]="linea.cantidad"
+              (ngModelChange)="actualizarLinea(i, { cantidad: $event })"
+            />
+            @if (!Number.isInteger(linea.cantidad) || linea.cantidad <= 0) {
+              <div class="form-text text-danger">Cantidad inválida.</div>
+            }
+          </td>
+          <td class="text-end">{{ linea.cantidad * precioDe(linea.productoId) | number: '1.0-0' }}</td>
+          <td>
+            <button type="button" class="btn btn-sm btn-outline-danger" (click)="eliminarLinea(i)">
+              Quitar
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <button type="button" class="btn btn-outline-secondary btn-sm" (click)="agregarLinea()">
+    + Agregar producto
+  </button>
+
+  @if (sinLineas()) {
+    <div class="form-text text-danger mt-2">Agrega al menos un producto.</div>
+  }
+
+  <div class="text-end fw-bold mt-3">Total: {{ total() | number: '1.0-0' }}</div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.dismiss()">Cancelar</button>
+  <button type="button" class="btn btn-primary" [disabled]="formularioInvalido()" (click)="confirmar()">
+    Confirmar pedido
+  </button>
+</div>
