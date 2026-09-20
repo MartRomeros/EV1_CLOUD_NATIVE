@@ -1,0 +1,61 @@
+<div class="admin-page">
+  <h1>Usuarios y roles</h1>
+
+  <form class="admin-form" (ngSubmit)="handleSubmit()">
+    <input
+      type="email"
+      placeholder="Email"
+      [(ngModel)]="form.email"
+      name="email"
+      [disabled]="!!editingEmail"
+      required
+    />
+    <input type="text" placeholder="Nombre" [(ngModel)]="form.nombre" name="nombre" required />
+    <select [(ngModel)]="form.rol" name="rol">
+      <option value="admin">Administrador</option>
+      <option value="mecanico">Mecánico</option>
+      <option value="recepcion">Recepción</option>
+    </select>
+    <button type="submit">{{ editingEmail ? 'Actualizar' : 'Crear' }}</button>
+    @if (editingEmail) {
+      <button type="button" (click)="handleCancelEdit()">Cancelar</button>
+    }
+  </form>
+
+  @if (error) {
+    <p class="admin-error">{{ error }}</p>
+  }
+
+  @if (loading) {
+    <p>Cargando...</p>
+  } @else {
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Nombre</th>
+          <th>Rol</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (usuario of usuarios; track usuario.email) {
+          <tr>
+            <td>{{ usuario.email }}</td>
+            <td>{{ usuario.nombre }}</td>
+            <td>{{ usuario.rol }}</td>
+            <td class="admin-actions">
+              <button type="button" (click)="handleEdit(usuario)">Editar</button>
+              <button type="button" (click)="handleDelete(usuario.email)">Eliminar</button>
+            </td>
+          </tr>
+        }
+        @if (usuarios.length === 0) {
+          <tr>
+            <td colspan="4">No hay usuarios todavía.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

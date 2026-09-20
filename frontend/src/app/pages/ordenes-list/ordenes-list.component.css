@@ -1,0 +1,48 @@
+.ordenes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.btn-primary {
+  background: #0f6cbd;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1.2rem;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.ordenes-error {
+  color: #ef4444;
+  margin-bottom: 1rem;
+}
+
+.ordenes-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ordenes-table th,
+.ordenes-table td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ordenes-table a {
+  color: #0f6cbd;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ordenes-actions button {
+  padding: 0.3rem 0.7rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #ef4444;
+  color: #fff;
+}

@@ -1,0 +1,28 @@
+<div class="layout">
+  <header class="layout-header">
+    <span class="layout-title">Pedidos360</span>
+    @if (isAuthenticated) {
+      <div class="layout-user">
+        <span>{{ username }}</span>
+        @if (roles.length > 0) {
+          <span class="layout-roles">{{ roles.join(', ') }}</span>
+        }
+        <button type="button" (click)="logout()">Cerrar sesión</button>
+      </div>
+    }
+  </header>
+  @if (isAuthenticated) {
+    <nav class="layout-nav">
+      <a routerLink="/ordenes" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">Órdenes</a>
+      <span class="layout-nav-group">Administración:</span>
+      <a routerLink="/admin/clientes" routerLinkActive="active">Clientes</a>
+      <a routerLink="/admin/catalogo" routerLinkActive="active">Catálogo</a>
+      <a routerLink="/admin/usuarios" routerLinkActive="active">Usuarios</a>
+    </nav>
+    <main class="layout-content">
+      <router-outlet></router-outlet>
+    </main>
+  } @else {
+    <app-login></app-login>
+  }
+</div>

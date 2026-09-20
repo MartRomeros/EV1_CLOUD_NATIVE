@@ -1,0 +1,52 @@
+<div class="admin-page">
+  <h1>Clientes</h1>
+
+  <form class="admin-form" (ngSubmit)="handleSubmit()">
+    <input type="text" placeholder="Nombre" [(ngModel)]="form.nombre" name="nombre" required />
+    <input type="text" placeholder="Teléfono" [(ngModel)]="form.telefono" name="telefono" required />
+    <input type="email" placeholder="Email" [(ngModel)]="form.email" name="email" required />
+    <button type="submit">{{ editingId ? 'Actualizar' : 'Crear' }}</button>
+    @if (editingId) {
+      <button type="button" (click)="handleCancelEdit()">Cancelar</button>
+    }
+  </form>
+
+  @if (error) {
+    <p class="admin-error">{{ error }}</p>
+  }
+
+  @if (loading) {
+    <p>Cargando...</p>
+  } @else {
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Teléfono</th>
+          <th>Email</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (cliente of clientes; track cliente.clienteId) {
+          <tr>
+            <td>{{ cliente.clienteId }}</td>
+            <td>{{ cliente.nombre }}</td>
+            <td>{{ cliente.telefono }}</td>
+            <td>{{ cliente.email }}</td>
+            <td class="admin-actions">
+              <button type="button" (click)="handleEdit(cliente)">Editar</button>
+              <button type="button" (click)="handleDelete(cliente.clienteId)">Eliminar</button>
+            </td>
+          </tr>
+        }
+        @if (clientes.length === 0) {
+          <tr>
+            <td colspan="5">No hay clientes todavía.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
