@@ -49,6 +49,17 @@ resource "aws_apigatewayv2_route" "proxy" {
   authorizer_id      = aws_apigatewayv2_authorizer.entra_jwt.id
 }
 
+# Preflight CORS: "ANY /{proxy+}" también matchea OPTIONS y exige JWT, pero el
+# preflight del navegador nunca manda Authorization. Sin esta ruta explícita
+# sin auth, el authorizer rechaza el preflight antes de que aplique el
+# cors_configuration de la API.
+resource "aws_apigatewayv2_route" "proxy_options" {
+  api_id             = aws_apigatewayv2_api.this.id
+  route_key          = "OPTIONS /{proxy+}"
+  target             = "integrations/${aws_apigatewayv2_integration.backend.id}"
+  authorization_type = "NONE"
+}
+
 # Ruta pública: backend/src/routes/index.js expone GET /health sin auth, y
 # terraform/modules/nlb ya lo usa como health check del target group. No
 # lleva authorizer_id: queda fuera del JWT_Authorizer a propósito.
