@@ -210,7 +210,7 @@ jobs:
             --name tallerpro360-backend \
             --restart unless-stopped \
             --network tallerpro-net \
-            -p 8085:3000 \
+            -p 3000:3000 \
             $ENV_OPT \
             "$IMAGE"
 

@@ -93,4 +93,9 @@ module "api_gateway" {
   nlb_listener_arn  = module.nlb.listener_arn
   entra_tenant_id   = var.entra_tenant_id
   entra_audience    = var.entra_audience
+
+  cors_allowed_origins = [
+    "http://localhost:4200",
+    "https://${var.frontend_domain}",
+  ]
 }

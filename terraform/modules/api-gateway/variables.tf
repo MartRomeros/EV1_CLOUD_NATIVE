@@ -27,3 +27,8 @@ variable "entra_audience" {
   description = "Audience(s) esperado en el claim \"aud\" del JWT (client ID o URI de scope de la App Registration). Sin default: debe pasarse explícitamente."
   type        = list(string)
 }
+
+variable "cors_allowed_origins" {
+  description = "Orígenes permitidos para el frontend (Angular dev server + dominio en producción)."
+  type        = list(string)
+}

@@ -11,6 +11,13 @@ resource "aws_apigatewayv2_vpc_link" "this" {
 resource "aws_apigatewayv2_api" "this" {
   name          = "${var.project}-api"
   protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_origins = var.cors_allowed_origins
+    allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allow_headers = ["Authorization", "Content-Type"]
+    max_age       = 300
+  }
 }
 
 resource "aws_apigatewayv2_integration" "backend" {
