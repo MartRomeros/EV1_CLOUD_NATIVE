@@ -141,3 +141,4 @@ Durante el desarrollo e integración de Angular 22 con `@azure/msal-angular`, se
 - [Backend REST API y Matriz RBAC](../backend/README.md)
 - [Infraestructura AWS con Terraform](../terraform/README.md)
 - [Guía de Configuración en Microsoft Entra ID](../azure/README.md)
+ 
