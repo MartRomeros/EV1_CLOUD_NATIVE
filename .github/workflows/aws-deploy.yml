@@ -83,6 +83,13 @@ jobs:
           docker stop tallerpro360-frontend 2>/dev/null || true
           docker rm tallerpro360-frontend 2>/dev/null || true
 
+          echo "=== [Frontend] Liberando puerto 8080 si quedó ocupado por otro contenedor ==="
+          STALE_CONTAINERS=$(docker ps -aq --filter "publish=8080")
+          if [ -n "$STALE_CONTAINERS" ]; then
+            echo "Contenedores encontrados usando el puerto 8080, forzando eliminación: $STALE_CONTAINERS"
+            docker rm -f $STALE_CONTAINERS 2>/dev/null || true
+          fi
+
           echo "=== [Frontend] Verificando o creando red Docker común ==="
           docker network inspect tallerpro-net >/dev/null 2>&1 || docker network create tallerpro-net
 
