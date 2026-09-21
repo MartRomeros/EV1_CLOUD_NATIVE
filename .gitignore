@@ -41,3 +41,8 @@ db_data/
 CLAUDE.md
 AGENTS.md
 .agents/
+
+
+# podman config
+venv
+.python-version

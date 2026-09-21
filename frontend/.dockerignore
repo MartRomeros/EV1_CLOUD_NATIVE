@@ -1,0 +1,17 @@
+node_modules
+.angular
+dist
+.git
+.gitignore
+.editorconfig
+.vscode
+.idea
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.dockerignore
+Dockerfile
+README.md
+DEPLOY_EC2.md
+nginx-ec2.conf

@@ -4,7 +4,7 @@ export const environment = {
   production: true,
   azureClientId: '00000000-0000-0000-0000-000000000000',
   azureTenantId: '00000000-0000-0000-0000-000000000000',
-  redirectUri: 'https://martin-romero.cl/cloud',
+  redirectUri: 'https://app.martin-romero.cl',
   apiScope: 'api://00000000-0000-0000-0000-000000000000/access_as_user',
   apiUrl: 'https://TU-API-ID.execute-api.TU-REGION.amazonaws.com',
 };

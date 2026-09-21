@@ -1,0 +1,243 @@
+name: Deploy Application to AWS Academy (EC2)
+
+on:
+  workflow_run:
+    workflows: ["Docker Build and Push to Docker Hub"]
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Instancias EC2 a actualizar'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - frontend
+          - backend
+
+permissions:
+  contents: read
+
+jobs:
+  # ========================================================
+  # Despliegue en la instancia EC2 de Frontend
+  # ========================================================
+  deploy-frontend:
+    name: Deploy Frontend (EC2)
+    if: ${{ (github.event_name == 'workflow_dispatch' && (inputs.target == 'both' || inputs.target == 'frontend')) || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validar Secrets requeridos para Frontend
+        run: |
+          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ] || [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
+            echo "::error::Credenciales de AWS faltantes (AWS_ACCESS_KEY_ID o AWS_SECRET_ACCESS_KEY)."
+            exit 1
+          fi
+          if [ -z "${{ secrets.AWS_SESSION_TOKEN }}" ]; then
+            echo "::error::AWS_SESSION_TOKEN no está definido. AWS Academy requiere session token."
+            exit 1
+          fi
+          if [ -z "${{ secrets.AWS_EC2_FRONTEND_INSTANCE_ID }}" ]; then
+            echo "::error::El secret AWS_EC2_FRONTEND_INSTANCE_ID no está configurado."
+            exit 1
+          fi
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+            echo "::error::El secret DOCKERHUB_USERNAME no está configurado."
+            exit 1
+          fi
+
+      - name: Configurar Credenciales de AWS Academy
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+
+      - name: Ejecutar despliegue vía AWS SSM en EC2 Frontend
+        run: |
+          INSTANCE_ID="${{ secrets.AWS_EC2_FRONTEND_INSTANCE_ID }}"
+          DOCKER_USER="${{ secrets.DOCKERHUB_USERNAME }}"
+          IMAGE="${DOCKER_USER}/tallerpro360-frontend:latest"
+
+          echo "Preparando script de despliegue para EC2 Frontend ($INSTANCE_ID)..."
+
+          cat << 'EOF' > deploy_frontend.sh
+          set -e
+          IMAGE="__IMAGE__"
+          echo "=== [Frontend] Descargando imagen actualizada: $IMAGE ==="
+          docker pull "$IMAGE"
+
+          echo "=== [Frontend] Deteniendo contenedor anterior si está activo ==="
+          docker stop tallerpro360-frontend 2>/dev/null || true
+          docker rm tallerpro360-frontend 2>/dev/null || true
+
+          echo "=== [Frontend] Verificando o creando red Docker común ==="
+          docker network inspect tallerpro-net >/dev/null 2>&1 || docker network create tallerpro-net
+
+          echo "=== [Frontend] Iniciando nuevo contenedor de Frontend (puerto 127.0.0.1:8080:80) ==="
+          docker run -d \
+            --name tallerpro360-frontend \
+            --restart unless-stopped \
+            --network tallerpro-net \
+            -p 127.0.0.1:8080:80 \
+            "$IMAGE"
+
+          echo "=== [Frontend] Esperando inicio del contenedor y verificando estado ==="
+          sleep 4
+          docker ps --filter "name=tallerpro360-frontend"
+          echo "=== [Frontend] Despliegue finalizado exitosamente ==="
+          EOF
+
+          sed -i "s|__IMAGE__|$IMAGE|g" deploy_frontend.sh
+
+          COMMANDS_JSON=$(jq -R -s -c 'split("\n")[:-1]' deploy_frontend.sh)
+
+          echo "Enviando comando SSM a la instancia EC2 Frontend..."
+          SEND_RESPONSE=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters "{\"commands\": $COMMANDS_JSON}" \
+            --output json)
+
+          COMMAND_ID=$(echo "$SEND_RESPONSE" | jq -r '.Command.CommandId')
+          echo "Comando SSM emitido con ID: $COMMAND_ID. Esperando ejecución en la EC2..."
+
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID"
+
+          INVOCATION=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --output json)
+
+          STATUS=$(echo "$INVOCATION" | jq -r '.Status')
+          echo "=== Salida del comando en la EC2 Frontend (Estado: $STATUS) ==="
+          echo "$INVOCATION" | jq -r '.StandardOutputContent'
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "::error::El comando SSM en la EC2 de Frontend falló con estado $STATUS."
+            echo "=== Error estándar reportado ===" >&2
+            echo "$INVOCATION" | jq -r '.StandardErrorContent' >&2
+            exit 1
+          fi
+
+  # ========================================================
+  # Despliegue en la instancia EC2 de Backend
+  # ========================================================
+  deploy-backend:
+    name: Deploy Backend (EC2)
+    if: ${{ (github.event_name == 'workflow_dispatch' && (inputs.target == 'both' || inputs.target == 'backend')) || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validar Secrets requeridos para Backend
+        run: |
+          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ] || [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
+            echo "::error::Credenciales de AWS faltantes (AWS_ACCESS_KEY_ID o AWS_SECRET_ACCESS_KEY)."
+            exit 1
+          fi
+          if [ -z "${{ secrets.AWS_SESSION_TOKEN }}" ]; then
+            echo "::error::AWS_SESSION_TOKEN no está definido. AWS Academy requiere session token."
+            exit 1
+          fi
+          if [ -z "${{ secrets.AWS_EC2_BACKEND_INSTANCE_ID }}" ]; then
+            echo "::error::El secret AWS_EC2_BACKEND_INSTANCE_ID no está configurado."
+            exit 1
+          fi
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+            echo "::error::El secret DOCKERHUB_USERNAME no está configurado."
+            exit 1
+          fi
+
+      - name: Configurar Credenciales de AWS Academy
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+
+      - name: Ejecutar despliegue vía AWS SSM en EC2 Backend
+        run: |
+          INSTANCE_ID="${{ secrets.AWS_EC2_BACKEND_INSTANCE_ID }}"
+          DOCKER_USER="${{ secrets.DOCKERHUB_USERNAME }}"
+          IMAGE="${DOCKER_USER}/tallerpro360-backend:latest"
+
+          echo "Preparando script de despliegue para EC2 Backend ($INSTANCE_ID)..."
+
+          cat << 'EOF' > deploy_backend.sh
+          set -e
+          IMAGE="__IMAGE__"
+          echo "=== [Backend] Descargando imagen actualizada: $IMAGE ==="
+          docker pull "$IMAGE"
+
+          echo "=== [Backend] Deteniendo contenedor anterior si está activo ==="
+          docker stop tallerpro360-backend 2>/dev/null || true
+          docker rm tallerpro360-backend 2>/dev/null || true
+
+          echo "=== [Backend] Verificando o creando red Docker común ==="
+          docker network inspect tallerpro-net >/dev/null 2>&1 || docker network create tallerpro-net
+
+          ENV_OPT=""
+          if [ -f /home/ubuntu/.env ]; then
+            echo "=== [Backend] Cargando variables desde /home/ubuntu/.env ==="
+            ENV_OPT="--env-file /home/ubuntu/.env"
+          else
+            echo "=== [Backend] No se encontró /home/ubuntu/.env; usando configuración default ==="
+          fi
+
+          echo "=== [Backend] Iniciando nuevo contenedor de Backend (puerto 8085:3000) ==="
+          docker run -d \
+            --name tallerpro360-backend \
+            --restart unless-stopped \
+            --network tallerpro-net \
+            -p 8085:3000 \
+            $ENV_OPT \
+            "$IMAGE"
+
+          echo "=== [Backend] Esperando inicio del contenedor y verificando estado ==="
+          sleep 4
+          docker ps --filter "name=tallerpro360-backend"
+          echo "=== [Backend] Despliegue finalizado exitosamente ==="
+          EOF
+
+          sed -i "s|__IMAGE__|$IMAGE|g" deploy_backend.sh
+
+          COMMANDS_JSON=$(jq -R -s -c 'split("\n")[:-1]' deploy_backend.sh)
+
+          echo "Enviando comando SSM a la instancia EC2 Backend..."
+          SEND_RESPONSE=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters "{\"commands\": $COMMANDS_JSON}" \
+            --output json)
+
+          COMMAND_ID=$(echo "$SEND_RESPONSE" | jq -r '.Command.CommandId')
+          echo "Comando SSM emitido con ID: $COMMAND_ID. Esperando ejecución en la EC2..."
+
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID"
+
+          INVOCATION=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --output json)
+
+          STATUS=$(echo "$INVOCATION" | jq -r '.Status')
+          echo "=== Salida del comando en la EC2 Backend (Estado: $STATUS) ==="
+          echo "$INVOCATION" | jq -r '.StandardOutputContent'
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "::error::El comando SSM en la EC2 de Backend falló con estado $STATUS."
+            echo "=== Error estándar reportado ===" >&2
+            echo "$INVOCATION" | jq -r '.StandardErrorContent' >&2
+            exit 1
+          fi

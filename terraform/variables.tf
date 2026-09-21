@@ -20,12 +20,6 @@ variable "lab_role_name" {
   default     = "LabRole"
 }
 
-variable "ecr_grant_lab_role" {
-  description = "Añade una política de repositorio que permite a LabRole hacer push/pull en todos los repos ECR."
-  type        = bool
-  default     = true
-}
-
 variable "project" {
   description = "Nombre del proyecto, usado como prefijo y tag."
   type        = string
@@ -44,21 +38,87 @@ variable "tags" {
   default     = {}
 }
 
-variable "ecr_repositories" {
-  description = <<-EOT
-    Mapa de repositorios ECR a crear. La clave es el nombre del repositorio
-    (se le antepone "<project>-"). Todos los atributos son opcionales.
-  EOT
-  type = map(object({
-    image_tag_mutability = optional(string, "IMMUTABLE")
-    scan_on_push         = optional(bool, true)
-    force_delete         = optional(bool, false)
-    encryption_type      = optional(string, "AES256")
-    kms_key              = optional(string)
-    max_image_count      = optional(number, 10)
-    untagged_expiry_days = optional(number, 14)
-    policy_json          = optional(string)
-    tags                 = optional(map(string), {})
-  }))
-  default = {}
+# --- Red (network/vpc) ------------------------------------------------------
+
+variable "owner_name" {
+  description = "Nombre del owner, exigido por el módulo de la Instancia NAT (network/vpc/vendor/nat-instance)."
+  type        = string
+}
+
+variable "nat_instance_type" {
+  description = "Tipo de instancia para la Instancia NAT."
+  type        = string
+  default     = "t3.micro"
+}
+
+# --- Security Groups (network/security-groups) -----------------------------
+
+variable "app_port" {
+  description = "Puerto de la app backend (contenedor EC2 y target group del NLB)."
+  type        = number
+  default     = 3000
+}
+
+# --- EC2 backend / EC2 Frontend (SSM) ---------------------------------------
+
+variable "instance_profile_name" {
+  description = "Nombre del instance profile asociado a LabRole en esta cuenta de AWS Academy (necesario para administrar las EC2 vía SSM)."
+  type        = string
+}
+
+# --- EC2 backend -------------------------------------------------------------
+
+variable "ec2_instance_type" {
+  description = "Tipo de instancia de la EC2 backend."
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "docker_image" {
+  description = "Imagen Docker Hub del backend, ej. \"usuario/tallerpro360-backend:latest\". Sin default: debe pasarse explícitamente en terraform.tfvars."
+  type        = string
+}
+
+# --- RDS ---------------------------------------------------------------------
+
+variable "db_name" {
+  description = "Nombre de la base de datos inicial en RDS."
+  type        = string
+  default     = "tallerpro360"
+}
+
+variable "db_username" {
+  description = "Usuario maestro de RDS."
+  type        = string
+  default     = "postgres"
+}
+
+variable "db_password" {
+  description = "Password maestro de RDS. Si es \"\", el módulo rds genera uno aleatorio."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+# --- EC2 Frontend ------------------------------------------------------------
+
+variable "frontend_instance_type" {
+  description = "Tipo de instancia de la EC2 Frontend."
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "frontend_docker_image" {
+  description = "Imagen Docker Hub del frontend, ej. \"usuario/tallerpro360-frontend:latest\". Sin default: debe pasarse explícitamente en terraform.tfvars."
+  type        = string
+}
+
+variable "frontend_domain" {
+  description = "Dominio para el cual Certbot solicita el certificado TLS, ej. \"app.ejemplo.cl\". Debe apuntar por DNS (registro A) a la Elastic IP de la EC2 Frontend antes del primer apply."
+  type        = string
+}
+
+variable "certbot_email" {
+  description = "Email de contacto para el registro ACME de Let's Encrypt. Sin default: Let's Encrypt exige uno real."
+  type        = string
 }

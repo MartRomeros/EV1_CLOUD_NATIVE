@@ -3,7 +3,7 @@
 #     en ~/.aws/credentials bajo el perfil [default]. Se renuevan cada sesión.
 #  2. La región del lab suele estar fijada a us-east-1.
 #  3. No definas aws_profile salvo que hayas creado un perfil con ese nombre.
-#  4. LabRole es el único rol disponible; ecr_grant_lab_role le da push/pull.
+#  4. LabRole es el único rol disponible en el lab.
 #  5. No se pueden crear claves KMS de cliente: deja el cifrado en AES256.
 # -----------------------------------------------------------------------------
 
@@ -11,16 +11,28 @@ aws_region  = "us-east-1"
 project     = "ev1-cloud"
 environment = "lab"
 
-ecr_grant_lab_role = true
+# --- Red / SSM ---------------------------------------------------------------
+# owner_name: tu nombre, exigido por el módulo de la Instancia NAT.
+owner_name = "Tu Nombre"
 
-ecr_repositories = {
-  api = {
-    force_delete = true # entorno efímero: permite destruir con imágenes dentro
-  }
+# instance_profile_name: nombre del instance profile de AWS Academy asociado a
+# LabRole (verificar en la consola de EC2 -> Instance Profiles; debe incluir
+# la policy AmazonSSMManagedInstanceCore para poder usar SSM).
+instance_profile_name = "LabInstanceProfile"
 
-  worker = {
-    force_delete         = true
-    max_image_count      = 20
-    untagged_expiry_days = 7
-  }
-}
+# --- Backend ------------------------------------------------------------------
+# docker_image: imagen real de backend/ publicada en Docker Hub. Sin valor por
+# defecto a propósito: no hay ninguna imagen publicada todavía.
+docker_image = "usuario/tallerpro360-backend:latest"
+
+# --- Frontend ------------------------------------------------------------------
+# frontend_docker_image: imagen real de frontend/ publicada en Docker Hub.
+frontend_docker_image = "usuario/tallerpro360-frontend:latest"
+
+# frontend_domain: debe tener un registro DNS (A) apuntando a la Elastic IP de
+# la EC2 Frontend ANTES del primer "terraform apply", para que certbot --nginx
+# pueda completar el challenge HTTP-01 en el primer arranque.
+frontend_domain = "app.ejemplo.cl"
+
+# certbot_email: email real de contacto para el registro ACME de Let's Encrypt.
+certbot_email = "tu-correo@ejemplo.cl"

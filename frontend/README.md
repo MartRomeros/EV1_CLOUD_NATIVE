@@ -101,25 +101,17 @@ src/
 - **MsalInterceptor** adjunta el bearer token a cada request HTTP cuya URL matchee `protectedResourceMap` (configurado en `auth/msal.config.ts` con el scope del API Gateway).
 - Los roles de aplicación (App Roles de Entra ID) se leen desde los claims del ID token vía `getRolesFromAccount()` y se muestran en el header.
 
-## Deploy (FTP a cPanel)
+## Deploy (Docker en AWS EC2 + Nginx Reverse Proxy y Certbot SSL)
 
-Este frontend está pensado para subirse por **FTP** a un hosting **cPanel**, en el subdirectorio `/cloud` del dominio: `https://martin-romero.cl/cloud` (ajustar si el dominio final es otro).
+El frontend se despliega como contenedor Docker servido en una instancia **AWS EC2 (Ubuntu 22.04/24.04 LTS)** bajo el subdominio **`https://app.martin-romero.cl`**:
 
-Por eso:
+- **`Dockerfile`**: Multi-stage build (Node 22 para compilar `npm run build:prod` y Nginx Alpine para servir los estáticos en el puerto 80).
+- **`nginx.conf`**: Configuración interna del contenedor con compresión gzip y fallback SPA `try_files $uri $uri/ /index.html;`.
+- **`nginx-ec2.conf`**: Configuración para el host EC2 con redirección 301 de HTTP a HTTPS y Reverse Proxy hacia `http://127.0.0.1:8080` con certificados Let's Encrypt / Certbot.
+- **`angular.json`**: Configurado con `"baseHref": "/"` para servir en la raíz del subdominio.
+- **`DEPLOY_EC2.md`**: Guía paso a paso con los comandos exactos para instalar dependencias, emitir certificados con Certbot y correr el contenedor mediante `docker run`.
 
-- `angular.json` tiene `baseHref: "/cloud/"` en la configuración `production` — Angular reescribe el `<base href>` de `index.html` en el build para que las rutas y assets resuelvan bien dentro del subdirectorio.
-- `environment.prod.ts` usa ese mismo dominio como `redirectUri` (hay que agregarlo como Redirect URI en el App Registration cuando se conozca el dominio final).
-- `public/.htaccess` se copia tal cual a `dist/frontend/browser/` en el build; en cPanel (Apache) reescribe cualquier ruta que no sea un archivo/carpeta real (ej. `/cloud/ordenes`) hacia `index.html`, para que el router de Angular la resuelva en el navegador. Sin este archivo, recargar la página en una ruta distinta a `/cloud` da 404.
-
-Pasos:
-
-1. Verifica que `environment.prod.ts` tenga los valores de producción correctos (incluyendo `apiScope`/`apiUrl` reales del backend).
-2. Genera el build:
-   ```bash
-   npm run build:prod
-   ```
-3. Sube **el contenido** de la carpeta `dist/frontend/browser/` (incluyendo `.htaccess`, que es un archivo oculto — asegúrate que tu cliente FTP muestre archivos ocultos) a la carpeta `cloud` dentro del `public_html` del cPanel.
-4. Verifica en el navegador que el dominio cargue el login y que navegar a `/cloud/ordenes` directamente (o recargar ahí) también funcione, gracias al `.htaccess`.
+Para desplegar en la EC2, consultar la guía detallada: [`DEPLOY_EC2.md`](DEPLOY_EC2.md).
 
 ## Modelo de datos: Órdenes de Trabajo (OT)
 
