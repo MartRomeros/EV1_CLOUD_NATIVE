@@ -1,0 +1,22 @@
+<div class="dashboard-page">
+  <h1>Panel de Administrador</h1>
+
+  <section class="dashboard-links">
+    <a class="btn-primary" routerLink="/ordenes">Órdenes de trabajo</a>
+    <a class="btn-primary" routerLink="/admin/clientes">Clientes</a>
+    <a class="btn-primary" routerLink="/admin/catalogo">Catálogo</a>
+    <a class="btn-primary" routerLink="/admin/usuarios">Usuarios</a>
+  </section>
+
+  <section class="dashboard-resumen">
+    <h2>Resumen de OT</h2>
+    @if (loadingResumen) {
+      <p>Cargando resumen...</p>
+    } @else if (resumenError) {
+      <p class="dashboard-error">{{ resumenError }}</p>
+    } @else {
+      <p>Total de órdenes: {{ totalOrdenes }}</p>
+      <p>Total de ítems: {{ totalItems }}</p>
+    }
+  </section>
+</div>

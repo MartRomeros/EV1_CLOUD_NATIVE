@@ -9,12 +9,14 @@ import {
 } from '@azure/msal-browser';
 import { Subject, filter, takeUntil } from 'rxjs';
 import { getRolesFromAccount } from './auth/msal.config';
+import { getRoleDashboardPath } from './auth/role-dashboard';
 import { LoginComponent } from './pages/login/login.component';
+import { ToastComponent } from './shared/toast/toast.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LoginComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LoginComponent, ToastComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -28,6 +30,7 @@ export class AppComponent implements OnInit, OnDestroy {
   isAuthenticated = false;
   username: string | null = null;
   roles: string[] = [];
+  dashboardPath: string | null = null;
 
   ngOnInit(): void {
     this.msalService.handleRedirectObservable().subscribe();
@@ -82,9 +85,11 @@ export class AppComponent implements OnInit, OnDestroy {
     this.isAuthenticated = !!account;
     this.username = account?.username ?? null;
     this.roles = getRolesFromAccount(account);
+    this.dashboardPath = getRoleDashboardPath(this.roles);
+    console.log('[auth] roles del ID token:', this.roles, '-> dashboardPath:', this.dashboardPath);
 
     if (this.isAuthenticated && !wasAuthenticated) {
-      this.router.navigate(['/ordenes']);
+      this.router.navigate([this.dashboardPath ?? '/ordenes']);
     }
   }
 }

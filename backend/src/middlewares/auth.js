@@ -45,4 +45,40 @@ export function validateJwt(req, res, next) {
   return checkJwtMiddleware(req, res, next);
 }
 
+/**
+ * Middleware para autorización basada en roles (RBAC).
+ * Verifica que el usuario autenticado cuente con al menos uno de los roles permitidos.
+ * Los roles se extraen del claim `roles` del token JWT (req.auth.roles) emitido por Entra ID.
+ * Si ENV.AUTH_REQUIRED es false (desarrollo local), permite continuar sin bloquear.
+ *
+ * @param {...string} allowedRoles - Lista de roles autorizados para el endpoint.
+ */
+export function requireRole(...allowedRoles) {
+  const normalizedAllowed = allowedRoles.map((r) => String(r).toLowerCase());
+
+  return (req, res, next) => {
+    if (!ENV.AUTH_REQUIRED) {
+      return next();
+    }
+
+    const tokenRoles = req.auth?.roles;
+    const userRoles = Array.isArray(tokenRoles)
+      ? tokenRoles.map((r) => String(r).toLowerCase())
+      : typeof tokenRoles === 'string'
+      ? [tokenRoles.toLowerCase()]
+      : [];
+
+    const hasPermission = normalizedAllowed.some((role) => userRoles.includes(role));
+
+    if (!hasPermission) {
+      return res.status(403).json({
+        error: 'Acceso denegado: permisos insuficientes para este recurso',
+      });
+    }
+
+    return next();
+  };
+}
+
 export default validateJwt;
+

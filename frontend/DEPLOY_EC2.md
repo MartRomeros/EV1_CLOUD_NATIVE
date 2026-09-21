@@ -13,13 +13,13 @@ Esta guía contiene los comandos exactos y el paso a paso para desplegar el fron
 2. **Registro DNS**:
    - Un registro tipo **`A`** en tu proveedor de DNS que apunte:
      ```text
-     app.martin-romero.cl  ->  [IP Pública o Elástica de tu EC2]
+     app.ejemplo.cl  ->  [IP Pública o Elástica de tu EC2]
      ```
    - *Nota: Asegúrate de que el DNS haya propagado antes de pedir el certificado SSL.*
 3. **Azure Entra ID (App Registration)**:
    - En el portal de Azure, dentro de la aplicación `pedidos360-frontend`:
    - Ir a **Authentication** -> **Single-page application** -> **Redirect URIs**.
-   - Agregar: `https://app.martin-romero.cl`.
+   - Agregar: `https://app.ejemplo.cl`.
 
 ---
 

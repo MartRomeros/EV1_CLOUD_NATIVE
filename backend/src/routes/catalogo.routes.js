@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import * as catalogoController from '../controllers/catalogo.controller.js';
+import { requireRole } from '../middlewares/auth.js';
 
 const router = Router();
+
+// Todas las operaciones de catálogo son exclusivas para el rol admin
+router.use(requireRole('admin'));
 
 router.get('/', catalogoController.getAll);
 router.post('/', catalogoController.create);

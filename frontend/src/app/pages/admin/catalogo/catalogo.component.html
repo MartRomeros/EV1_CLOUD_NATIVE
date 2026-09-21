@@ -1,17 +1,51 @@
 <div class="admin-page">
   <h1>Catálogo de servicios y precios</h1>
 
-  <form class="admin-form" (ngSubmit)="handleSubmit()">
-    <input
-      type="text"
-      placeholder="Concepto (ej. MO-HH)"
-      [(ngModel)]="form.concepto"
-      name="concepto"
-      [disabled]="!!editingConcepto"
-      required
-    />
-    <input type="text" placeholder="Descripción" [(ngModel)]="form.descripcion" name="descripcion" required />
-    <input type="number" placeholder="Precio unitario" min="0" [(ngModel)]="form.precioUnit" name="precioUnit" required />
+  <form class="admin-form" #f="ngForm" (ngSubmit)="handleSubmit(f)">
+    <div class="admin-field">
+      <input
+        type="text"
+        placeholder="Concepto (ej. MO-HH)"
+        [(ngModel)]="form.concepto"
+        name="concepto"
+        [disabled]="!!editingConcepto"
+        required
+        #conceptoCtrl="ngModel"
+        [class.input-invalid]="conceptoCtrl.invalid && conceptoCtrl.touched"
+      />
+      @if (conceptoCtrl.invalid && conceptoCtrl.touched) {
+        <span class="field-error">El concepto es obligatorio.</span>
+      }
+    </div>
+    <div class="admin-field">
+      <input
+        type="text"
+        placeholder="Descripción"
+        [(ngModel)]="form.descripcion"
+        name="descripcion"
+        required
+        #descripcionCtrl="ngModel"
+        [class.input-invalid]="descripcionCtrl.invalid && descripcionCtrl.touched"
+      />
+      @if (descripcionCtrl.invalid && descripcionCtrl.touched) {
+        <span class="field-error">La descripción es obligatoria.</span>
+      }
+    </div>
+    <div class="admin-field">
+      <input
+        type="number"
+        placeholder="Precio unitario"
+        min="0"
+        [(ngModel)]="form.precioUnit"
+        name="precioUnit"
+        required
+        #precioUnitCtrl="ngModel"
+        [class.input-invalid]="precioUnitCtrl.invalid && precioUnitCtrl.touched"
+      />
+      @if (precioUnitCtrl.invalid && precioUnitCtrl.touched) {
+        <span class="field-error">El precio unitario es obligatorio.</span>
+      }
+    </div>
     <select [(ngModel)]="form.categoria" name="categoria">
       <option value="mano_obra">Mano de obra</option>
       <option value="repuesto">Repuesto</option>

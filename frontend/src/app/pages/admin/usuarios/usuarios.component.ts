@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { UsuariosService } from '../../../core/services/usuarios.service';
 import { Usuario, UsuarioInput } from '../../../core/models/usuario.model';
 
@@ -43,7 +43,12 @@ export class UsuariosComponent implements OnInit {
     });
   }
 
-  handleSubmit(): void {
+  handleSubmit(f: NgForm): void {
+    if (f.invalid) {
+      f.form.markAllAsTouched();
+      return;
+    }
+
     this.error = null;
     const request = this.editingEmail
       ? this.usuariosService.update(this.editingEmail, this.form)

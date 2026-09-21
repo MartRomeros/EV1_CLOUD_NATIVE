@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import {
-  FormArray,
   FormBuilder,
   ReactiveFormsModule,
   Validators,
@@ -32,7 +31,7 @@ export class OrdenFormComponent {
     items: this.fb.array([this.buildItemGroup()]),
   });
 
-  get items(): FormArray {
+  get items() {
     return this.form.controls.items;
   }
 

@@ -1,0 +1,47 @@
+<div class="dashboard-page">
+  <h1>Panel de Mecánico</h1>
+
+  <p class="dashboard-aviso">
+    Todavía no existe un campo de "mecánico asignado" en las OT: este listado
+    muestra todas las órdenes de trabajo. El filtrado por orden asignada
+    queda pendiente de que el backend exponga ese dato.
+  </p>
+
+  @if (error) {
+    <p class="dashboard-error">{{ error }}</p>
+  }
+
+  @if (loading) {
+    <p>Cargando...</p>
+  } @else {
+    <table class="dashboard-table">
+      <thead>
+        <tr>
+          <th>OT</th>
+          <th>Cliente</th>
+          <th>Patente</th>
+          <th>Descripción</th>
+          <th>Ítems</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (orden of ordenes; track orden.otId) {
+          <tr>
+            <td><a [routerLink]="['/ordenes', orden.otId]">{{ orden.otId }}</a></td>
+            <td>{{ orden.clienteId }}</td>
+            <td>{{ orden.patente }}</td>
+            <td>{{ orden.descripcion }}</td>
+            <td>{{ orden.nItems }}</td>
+            <td>$ {{ orden.total | number: '1.0-0' }}</td>
+          </tr>
+        }
+        @if (ordenes.length === 0) {
+          <tr>
+            <td colspan="6">No hay órdenes de trabajo todavía.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

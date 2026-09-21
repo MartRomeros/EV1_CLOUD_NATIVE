@@ -1,16 +1,36 @@
 <div class="admin-page">
   <h1>Usuarios y roles</h1>
 
-  <form class="admin-form" (ngSubmit)="handleSubmit()">
-    <input
-      type="email"
-      placeholder="Email"
-      [(ngModel)]="form.email"
-      name="email"
-      [disabled]="!!editingEmail"
-      required
-    />
-    <input type="text" placeholder="Nombre" [(ngModel)]="form.nombre" name="nombre" required />
+  <form class="admin-form" #f="ngForm" (ngSubmit)="handleSubmit(f)">
+    <div class="admin-field">
+      <input
+        type="email"
+        placeholder="Email"
+        [(ngModel)]="form.email"
+        name="email"
+        [disabled]="!!editingEmail"
+        required
+        #emailCtrl="ngModel"
+        [class.input-invalid]="emailCtrl.invalid && emailCtrl.touched"
+      />
+      @if (emailCtrl.invalid && emailCtrl.touched) {
+        <span class="field-error">El email es obligatorio.</span>
+      }
+    </div>
+    <div class="admin-field">
+      <input
+        type="text"
+        placeholder="Nombre"
+        [(ngModel)]="form.nombre"
+        name="nombre"
+        required
+        #nombreCtrl="ngModel"
+        [class.input-invalid]="nombreCtrl.invalid && nombreCtrl.touched"
+      />
+      @if (nombreCtrl.invalid && nombreCtrl.touched) {
+        <span class="field-error">El nombre es obligatorio.</span>
+      }
+    </div>
     <select [(ngModel)]="form.rol" name="rol">
       <option value="admin">Administrador</option>
       <option value="mecanico">Mecánico</option>

@@ -2,26 +2,44 @@
   margin-bottom: 0.25rem;
 }
 
-.admin-mock-note {
-  color: #64748b;
-  font-size: 0.85rem;
-  margin-bottom: 1.5rem;
-}
-
 .admin-form {
   display: flex;
+  align-items: flex-start;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }
 
-.admin-form input,
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 160px;
+}
+
 .admin-form select {
   flex: 1;
   min-width: 160px;
   padding: 0.5rem 0.75rem;
   border: 1px solid #cbd5e1;
   border-radius: 4px;
+}
+
+.admin-field input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+}
+
+.input-invalid {
+  border-color: #ef4444 !important;
+}
+
+.field-error {
+  color: #ef4444;
+  font-size: 0.8rem;
 }
 
 .admin-form button {

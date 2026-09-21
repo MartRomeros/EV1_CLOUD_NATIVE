@@ -1,10 +1,49 @@
 <div class="admin-page">
   <h1>Clientes</h1>
 
-  <form class="admin-form" (ngSubmit)="handleSubmit()">
-    <input type="text" placeholder="Nombre" [(ngModel)]="form.nombre" name="nombre" required />
-    <input type="text" placeholder="Teléfono" [(ngModel)]="form.telefono" name="telefono" required />
-    <input type="email" placeholder="Email" [(ngModel)]="form.email" name="email" required />
+  <form class="admin-form" #f="ngForm" (ngSubmit)="handleSubmit(f)">
+    <div class="admin-field">
+      <input
+        type="text"
+        placeholder="Nombre"
+        [(ngModel)]="form.nombre"
+        name="nombre"
+        required
+        #nombreCtrl="ngModel"
+        [class.input-invalid]="nombreCtrl.invalid && nombreCtrl.touched"
+      />
+      @if (nombreCtrl.invalid && nombreCtrl.touched) {
+        <span class="field-error">El nombre es obligatorio.</span>
+      }
+    </div>
+    <div class="admin-field">
+      <input
+        type="text"
+        placeholder="Teléfono"
+        [(ngModel)]="form.telefono"
+        name="telefono"
+        required
+        #telefonoCtrl="ngModel"
+        [class.input-invalid]="telefonoCtrl.invalid && telefonoCtrl.touched"
+      />
+      @if (telefonoCtrl.invalid && telefonoCtrl.touched) {
+        <span class="field-error">El teléfono es obligatorio.</span>
+      }
+    </div>
+    <div class="admin-field">
+      <input
+        type="email"
+        placeholder="Email"
+        [(ngModel)]="form.email"
+        name="email"
+        required
+        #emailCtrl="ngModel"
+        [class.input-invalid]="emailCtrl.invalid && emailCtrl.touched"
+      />
+      @if (emailCtrl.invalid && emailCtrl.touched) {
+        <span class="field-error">El email es obligatorio.</span>
+      }
+    </div>
     <button type="submit">{{ editingId ? 'Actualizar' : 'Crear' }}</button>
     @if (editingId) {
       <button type="button" (click)="handleCancelEdit()">Cancelar</button>

@@ -9,11 +9,27 @@
     <div class="header-fields">
       <label>
         Cliente
-        <input type="text" formControlName="clienteId" placeholder="CLI-001" />
+        <input
+          type="text"
+          formControlName="clienteId"
+          placeholder="CLI-001"
+          [class.input-invalid]="form.controls.clienteId.invalid && form.controls.clienteId.touched"
+        />
+        @if (form.controls.clienteId.invalid && form.controls.clienteId.touched) {
+          <span class="field-error">El cliente es obligatorio.</span>
+        }
       </label>
       <label>
         Patente
-        <input type="text" formControlName="patente" placeholder="XXYY11" />
+        <input
+          type="text"
+          formControlName="patente"
+          placeholder="XXYY11"
+          [class.input-invalid]="form.controls.patente.invalid && form.controls.patente.touched"
+        />
+        @if (form.controls.patente.invalid && form.controls.patente.touched) {
+          <span class="field-error">La patente es obligatoria.</span>
+        }
       </label>
       <label class="descripcion-field">
         Descripción
@@ -25,12 +41,34 @@
     <div formArrayName="items" class="items-editor">
       @for (item of items.controls; track item; let i = $index) {
         <div class="item-row" [formGroupName]="i">
-          <input type="text" formControlName="concepto" placeholder="Concepto (ej. MO-HH)" />
-          <input type="number" formControlName="cantidad" min="0.01" step="0.01" placeholder="Cantidad" />
-          <input type="number" formControlName="precioUnit" min="0" step="1" placeholder="Precio unitario" />
+          <input
+            type="text"
+            formControlName="concepto"
+            placeholder="Concepto (ej. MO-HH)"
+            [class.input-invalid]="item.controls.concepto.invalid && item.controls.concepto.touched"
+          />
+          <input
+            type="number"
+            formControlName="cantidad"
+            min="0.01"
+            step="0.01"
+            placeholder="Cantidad"
+            [class.input-invalid]="item.controls.cantidad.invalid && item.controls.cantidad.touched"
+          />
+          <input
+            type="number"
+            formControlName="precioUnit"
+            min="0"
+            step="1"
+            placeholder="Precio unitario"
+            [class.input-invalid]="item.controls.precioUnit.invalid && item.controls.precioUnit.touched"
+          />
           <span class="item-subtotal">$ {{ subtotal(i) | number: '1.0-0' }}</span>
           <button type="button" (click)="removeItem(i)" [disabled]="items.length === 1">Quitar</button>
         </div>
+        @if (item.invalid && item.touched) {
+          <span class="field-error item-error">Completa concepto, cantidad (&gt; 0) y precio unitario (&ge; 0) de este ítem.</span>
+        }
       }
     </div>
     <button type="button" class="btn-secondary" (click)="addItem()">Agregar ítem</button>

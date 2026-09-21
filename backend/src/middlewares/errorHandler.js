@@ -5,6 +5,12 @@
 export function errorHandler(err, req, res, next) {
   console.error(`[Error] ${req.method} ${req.originalUrl}:`, err);
 
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({
+      error: 'Token de autenticación no proporcionado o inválido',
+    });
+  }
+
   const statusCode = err.statusCode || err.status || 500;
   const message = err.message || 'Error interno del servidor';
 

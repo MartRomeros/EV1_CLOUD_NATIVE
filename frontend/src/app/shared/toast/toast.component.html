@@ -1,0 +1,17 @@
+<div class="toast-stack" aria-live="polite" role="status">
+  @for (toast of toasts(); track toast.id) {
+    <div
+      class="toast"
+      [class.toast-error]="toast.variant === 'error'"
+      [class.toast-warning]="toast.variant === 'warning'"
+    >
+      <span class="toast-message">{{ toast.message }}</span>
+      <button
+        type="button"
+        class="toast-close"
+        (click)="close(toast.id)"
+        aria-label="Cerrar notificación"
+      >×</button>
+    </div>
+  }
+</div>

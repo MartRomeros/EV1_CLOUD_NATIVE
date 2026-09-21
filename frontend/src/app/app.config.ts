@@ -20,6 +20,7 @@ import {
   MSALInstanceFactory,
   MSALInterceptorConfigFactory,
 } from './auth/msal.config';
+import { AuthErrorInterceptor } from './auth/auth-error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -31,6 +32,7 @@ export const appConfig: ApplicationConfig = {
     { provide: MSAL_GUARD_CONFIG, useFactory: MSALGuardConfigFactory },
     { provide: MSAL_INTERCEPTOR_CONFIG, useFactory: MSALInterceptorConfigFactory },
     { provide: HTTP_INTERCEPTORS, useClass: MsalInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: AuthErrorInterceptor, multi: true },
     // MsalGuard y MsalBroadcastService ya los provee MsalModule (importProvidersFrom arriba);
     // declararlos de nuevo aqui crea una segunda instancia de MsalBroadcastService que nunca
     // recibe el reset de interaction status, dejando componentes como LoginComponent pegados

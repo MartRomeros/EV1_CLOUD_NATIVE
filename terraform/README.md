@@ -1,70 +1,136 @@
-# IAC Para EV1 de Cloud Native
+# Infraestructura como Código (IaC) en AWS con Terraform
 
-Infraestructura AWS para el proyecto, pensada para **AWS Academy (Learner
-Lab)**: credenciales temporales, un único rol IAM disponible (`LabRole`),
-backend de estado local, y la cuenta se recrea entre sesiones.
+Módulo de aprovisionamiento automatizado de infraestructura cloud para **TallerPro360** (Evaluación Parcial N°1 - DSY1107). Diseñado específicamente para ejecutarse sobre el entorno **AWS Academy (Learner Lab)** utilizando el provider de AWS `~> 6.0`.
 
-## Módulos
+---
 
-- `network/vpc`: VPC de 2 AZs, 6 subredes (2 públicas, 2 privadas de
-  aplicación, 2 privadas de datos), tablas de rutas, e Instancia NAT dando
-  salida a internet a las subredes privadas. La Instancia NAT usa una copia
-  local parcheada (`network/vpc/vendor/nat-instance/`, basada en
-  `franciscobrioneslavados/terraform-aws-nat-instance` tag `v1.5.1`) en vez
-  del módulo remoto: el original no está publicado en el Terraform Registry
-  y además crea su propio IAM Role para SSM, algo que AWS Academy no
-  permite (`iam:CreateRole` denegado) — la copia local reusa el instance
-  profile de `LabRole` en su lugar.
-- `network/security-groups`: los 5 Security Groups del proyecto, encadenados
-  por referencia (`sg_vpc_link -> sg_nlb -> sg_ec2 -> sg_rds`) más
-  `sg_frontend` (único punto público, HTTP/HTTPS). Ninguno abre el puerto
-  22 — el acceso administrativo es exclusivamente vía AWS SSM.
-- `modules/rds`: instancia RDS PostgreSQL 15 en subred privada de datos, sin
-  acceso público.
-- `modules/ec2`: instancia EC2 backend en subred privada de aplicación,
-  corre el contenedor de `backend/` vía Docker.
-- `modules/ec2-frontend`: instancia EC2 en subred pública con Elastic IP,
-  corre el contenedor del frontend detrás de un nginx del sistema operativo
-  que gestiona TLS con Certbot.
-- `modules/nlb`: Network Load Balancer interno frente a la EC2 backend.
-- `modules/api-gateway`: API Gateway HTTP (v2) público, conectado al NLB
-  mediante VPC Link.
+## 🏗️ Topología de Red y Arquitectura de Infraestructura
 
-Orden real de aplicación (Terraform ya lo infiere del grafo de
-dependencias): `vpc -> security_groups -> {ec2_frontend, rds/ec2} -> nlb ->
-api_gateway`. El único `depends_on` explícito es `module.ec2` sobre
-`module.vpc`, para garantizar que la Instancia NAT ya exista antes de que la
-EC2 backend arranque su script de `user_data` (necesita salida a internet
-para instalar Docker).
+```mermaid
+flowchart TD
+    subgraph Internet["Internet Pública"]
+        Users["Usuarios Web (HTTPS)"]
+        EntraID["Azure Entra ID (OIDC)"]
+    end
 
-## Antes del primer `apply`
+    subgraph VPC["VPC TallerPro360 (10.0.0.0/16) - 2 Zonas de Disponibilidad"]
+        subgraph PublicSubnets["Subredes Públicas (10.0.1.0/24, 10.0.2.0/24)"]
+            NAT["Instancia NAT (Salida a Internet)"]
+            EC2Front["EC2 Frontend + Elastic IP<br/>• Nginx Reverse Proxy (SSL Certbot)<br/>• Docker Contenedor Angular 22"]
+        end
 
-1. Verificar en la consola de AWS Academy que existe un instance profile
-   asociado a `LabRole` (variable `instance_profile_name`) y que `LabRole`
-   tiene adjunta una policy equivalente a `AmazonSSMManagedInstanceCore` —
-   sin ella, `aws ssm start-session` no va a poder conectarse a ninguna EC2
-   (no hay acceso SSH de respaldo).
-2. Configurar el registro DNS (A) de `frontend_domain` apuntando a la
-   Elastic IP que va a asignarse a la EC2 Frontend, **antes** de aplicar por
-   primera vez — si no, `certbot --nginx` va a fallar el challenge HTTP-01
-   en el primer arranque (no bloquea el resto de la instancia; se puede
-   reintentar manualmente después vía SSM).
-3. Completar en `terraform.tfvars` (copiado de `terraform.tfvars.example`)
-   las variables sin valor por defecto: `owner_name`,
-   `instance_profile_name`, `docker_image`, `frontend_docker_image`,
-   `frontend_domain`, `certbot_email`.
+        subgraph PrivateAppSubnets["Subredes Privadas de Aplicación (10.0.10.0/24, 10.0.11.0/24)"]
+            NLB["Network Load Balancer (NLB) Interno"]
+            EC2Back["EC2 Backend (Docker)<br/>• Node.js + Express API REST<br/>• Middleware JWT + RBAC"]
+        end
 
-## Comandos
+        subgraph PrivateDataSubnets["Subredes Privadas de Datos (10.0.20.0/24, 10.0.21.0/24)"]
+            RDS["Amazon RDS PostgreSQL 15<br/>(db.t3.micro / db.t4g.micro)"]
+        end
+    end
+
+    subgraph Serverless["Servicios Gestionados AWS"]
+        APIGW["AWS API Gateway HTTP API (v2)<br/>• Integración VPC Link al NLB"]
+    end
+
+    Users -->|HTTPS:443| EC2Front
+    Users -->|API Requests| APIGW
+    APIGW -->|VPC Link (Túnel Privado)| NLB
+    NLB -->|Puerto 8085| EC2Back
+    EC2Back -->|Puerto 5432| RDS
+    EC2Back -.->|Descarga paquetes/Docker Hub| NAT
+    NAT -.->|Tráfico de Salida| Internet
+```
+
+---
+
+## 📦 Módulos Terraform
+
+La infraestructura está modularizada para facilitar el mantenimiento y la separación de responsabilidades:
+
+| Módulo | Directorio | Descripción |
+| :--- | :--- | :--- |
+| **VPC & Red** | `network/vpc` | Crea la VPC (10.0.0.0/16), 6 subredes en 2 AZs (`us-east-1a`, `us-east-1b`), Internet Gateway, tablas de ruteo e Instancia NAT basada en una copia local parcheada para AWS Academy (`network/vpc/vendor/nat-instance/`). |
+| **Security Groups** | `network/security-groups` | 5 grupos de seguridad encadenados por referencia: `sg_frontend` (público 80/443), `sg_vpc_link`, `sg_nlb`, `sg_ec2` y `sg_rds`. **El puerto 22 (SSH) no está abierto**: el acceso administrativo se realiza exclusivamente vía **AWS Systems Manager (SSM)**. |
+| **RDS PostgreSQL** | `modules/rds` | Instancia de base de datos PostgreSQL 15 en las subredes privadas de datos, protegida contra acceso público. |
+| **EC2 Backend** | `modules/ec2` | Servidor en subred privada que ejecuta el contenedor Docker del backend (`Node.js/Express`). Cuenta con `depends_on = [module.vpc]` para asegurar que la Instancia NAT esté disponible antes del `user_data`. |
+| **EC2 Frontend** | `modules/ec2-frontend` | Servidor en subred pública con Elastic IP asignada, configurado con Nginx, Certbot SSL y Docker para servir la SPA Angular bajo `app.martin-romero.cl`. |
+| **NLB Interno** | `modules/nlb` | Network Load Balancer interno de capa 4 situado frente a la EC2 backend para recibir el tráfico del API Gateway. |
+| **API Gateway** | `modules/api-gateway` | HTTP API (v2) público que reenvía peticiones al NLB interno a través de un `aws_apigatewayv2_vpc_link`. |
+
+---
+
+## ⚠️ Consideraciones de AWS Academy Learner Lab
+
+El entorno de AWS Academy presenta características que determinan la configuración de este proyecto:
+
+1. **Rol IAM Fijo (`LabRole`):** Las políticas de AWS Academy deniegan la creación de nuevos roles IAM (`iam:CreateRole`). Por ello, todos los recursos y módulos reutilizan el instance profile existente asociado a `LabRole`.
+2. **Sin Llaves SSH:** Las instancias no exponen el puerto 22. La administración remota se realiza mediante **AWS SSM Session Manager**:
+   ```bash
+   aws ssm start-session --target <INSTANCE_ID>
+   ```
+3. **Estado Local (`terraform.tfstate`):** Dado que la cuenta de AWS Academy se recrea periódicamente perdiendo los buckets S3 creados en sesiones previas, el backend de estado se mantiene intencionalmente en local (`local backend`).
+4. **Desincronización de Estado:** Si se inicia una nueva sesión en AWS Academy y `terraform plan` intenta recrear todo o arroja errores de recursos inexistentes, es recomendable eliminar el archivo `terraform.tfstate` local y re-aplicar.
+
+---
+
+## 🚀 Guía de Despliegue
+
+### 1. Configurar Credenciales Temporales de AWS
+Descarga o copia las credenciales activas desde la pestaña **AWS Details** de tu sesión en Learner Lab y expórtalas en tu terminal:
 
 ```bash
-cd terraform
+export AWS_ACCESS_KEY_ID="ASIA..."
+export AWS_SECRET_ACCESS_KEY="..."
+export AWS_SESSION_TOKEN="..."
+export AWS_DEFAULT_REGION="us-east-1"
+```
+
+### 2. Configurar Variables (`terraform.tfvars`)
+Copia la plantilla de ejemplo y ajusta los valores necesarios:
+
+```bash
+cp terraform.tfvars.example terraform.tfvars
+```
+
+Parámetros clave a revisar en `terraform.tfvars`:
+- `owner_name`: Identificador personal para el etiquetado de recursos.
+- `instance_profile_name`: Nombre del instance profile en AWS Academy (habitualmente `LabInstanceProfile` o similar).
+- `frontend_domain`: Nombre de dominio asignado (ej. `app.martin-romero.cl`).
+- `certbot_email`: Correo electrónico para la renovación de certificados SSL.
+- `docker_image`: Imagen de Docker Hub para el backend.
+- `frontend_docker_image`: Imagen de Docker Hub para el frontend.
+
+### 3. Comandos de Despliegue
+
+```bash
+# 1. Inicializar proveedores y módulos
 terraform init
+
+# 2. Validar sintaxis y configuración
 terraform validate
-terraform plan  -var-file=terraform.tfvars
+
+# 3. Planificar y previsualizar cambios
+terraform plan -var-file=terraform.tfvars
+
+# 4. Aprovisionar infraestructura en AWS
 terraform apply -var-file=terraform.tfvars
 ```
 
-Si `terraform plan` sobre una cuenta de AWS Academy recién recreada muestra
-que quiere recrear *todo* desde cero, el `terraform.tfstate` local queda
-desincronizado de una sesión anterior — borrarlo y volver a `apply` suele
-ser más rápido que reconciliar.
+---
+
+## 🧹 Destrucción de Recursos
+
+Para liberar recursos al finalizar las pruebas o la sesión de laboratorio:
+
+```bash
+terraform destroy -var-file=terraform.tfvars
+```
+
+---
+
+## 🔗 Enlaces Relacionados
+- [Documentación Maestro del Repositorio](../README.md)
+- [Backend REST API y Control de Acceso RBAC](../backend/README.md)
+- [Frontend Angular 22 y Dashboards](../frontend/README.md)
+- [Guía de Secretos para CI/CD con Terraform](../docs/CI_CD_SECRETS_GUIDE.md)

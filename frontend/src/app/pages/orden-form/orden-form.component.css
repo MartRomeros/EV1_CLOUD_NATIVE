@@ -3,6 +3,19 @@
   margin-bottom: 1rem;
 }
 
+.input-invalid {
+  border-color: #ef4444 !important;
+}
+
+.field-error {
+  color: #ef4444;
+  font-size: 0.8rem;
+}
+
+.item-error {
+  margin-top: -0.25rem;
+}
+
 .header-fields {
   display: flex;
   gap: 1rem;

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { CatalogoService } from '../../../core/services/catalogo.service';
 import { Servicio, ServicioInput } from '../../../core/models/servicio.model';
 
@@ -44,7 +44,12 @@ export class CatalogoComponent implements OnInit {
     });
   }
 
-  handleSubmit(): void {
+  handleSubmit(f: NgForm): void {
+    if (f.invalid) {
+      f.form.markAllAsTouched();
+      return;
+    }
+
     this.error = null;
     const request = this.editingConcepto
       ? this.catalogoService.update(this.editingConcepto, this.form)

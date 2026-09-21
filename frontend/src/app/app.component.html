@@ -13,6 +13,9 @@
   </header>
   @if (isAuthenticated) {
     <nav class="layout-nav">
+      @if (dashboardPath) {
+        <a [routerLink]="dashboardPath" routerLinkActive="active">Mi panel</a>
+      }
       <a routerLink="/ordenes" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">Órdenes</a>
       <span class="layout-nav-group">Administración:</span>
       <a routerLink="/admin/clientes" routerLinkActive="active">Clientes</a>
@@ -25,4 +28,5 @@
   } @else {
     <app-login></app-login>
   }
+  <app-toast></app-toast>
 </div>
