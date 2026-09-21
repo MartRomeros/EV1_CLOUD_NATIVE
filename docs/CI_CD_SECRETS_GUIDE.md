@@ -15,6 +15,8 @@ Configura los siguientes secrets en tu repositorio de GitHub:
 | :--- | :--- | :--- |
 | `DOCKERHUB_USERNAME` | Tu usuario de Docker Hub | Cuenta de Docker Hub |
 | `DOCKERHUB_TOKEN` | Personal Access Token (PAT) con permisos de lectura y escritura | Docker Hub ➔ Account Settings |
+| `DOCKERHUB_REPO_FRONTEND` | Nombre del repositorio para la imagen del Frontend (ej. `mi-usuario/tallerpro360-frontend` o `tallerpro360-frontend`) | Nombre que le diste al repo en Docker Hub |
+| `DOCKERHUB_REPO_BACKEND` | Nombre del repositorio para la imagen del Backend (ej. `mi-usuario/tallerpro360-backend` o `tallerpro360-backend`) | Nombre que le diste al repo en Docker Hub |
 | `AWS_ACCESS_KEY_ID` | Access Key ID provisto por AWS Academy Learner Lab | AWS Academy ➔ AWS Details |
 | `AWS_SECRET_ACCESS_KEY` | Secret Access Key provisto por AWS Academy Learner Lab | AWS Academy ➔ AWS Details |
 | `AWS_SESSION_TOKEN` | Token temporal de sesión (¡Obligatorio en AWS Academy!) | AWS Academy ➔ AWS Details |
@@ -36,6 +38,10 @@ Para permitir que GitHub Actions suba imágenes a tu cuenta sin exponer tu contr
    - **Access permissions**: `Read & Write` (o `Read, Write, Delete`).
 5. Copia el token generado (`dckr_pat_...`) y guárdalo en GitHub como `DOCKERHUB_TOKEN`.
 6. Guarda tu nombre de usuario de Docker Hub como `DOCKERHUB_USERNAME`.
+7. Configura los repositorios de tus imágenes como secrets:
+   - **`DOCKERHUB_REPO_FRONTEND`**: Puedes ingresar el nombre completo del repositorio (ej. `tu-usuario/tallerpro360-frontend`) o solo el nombre (ej. `tallerpro360-frontend`, el pipeline le antepondrá automáticamente tu usuario).
+   - **`DOCKERHUB_REPO_BACKEND`**: Lo mismo para la API backend (ej. `tu-usuario/tallerpro360-backend` o `tallerpro360-backend`).
+   - *(Si no los defines, el pipeline utilizará por defecto `<DOCKERHUB_USERNAME>/tallerpro360-frontend` y `<DOCKERHUB_USERNAME>/tallerpro360-backend`)*.
 
 > **Nota:** Al ser repositorios públicos en Docker Hub, las instancias EC2 podrán descargar las imágenes (`docker pull`) directamente sin necesidad de iniciar sesión en Docker dentro del servidor.
 

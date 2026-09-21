@@ -22,7 +22,7 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.
   > /etc/apt/sources.list.d/docker.list
 apt_update_with_retry
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-apt-get install -y postgresql-client
+sudo apt install postgresql-client -y
 
 groupadd -f docker
 usermod -aG docker ubuntu

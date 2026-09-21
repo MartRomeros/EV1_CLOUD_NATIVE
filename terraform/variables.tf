@@ -122,3 +122,15 @@ variable "certbot_email" {
   description = "Email de contacto para el registro ACME de Let's Encrypt. Sin default: Let's Encrypt exige uno real."
   type        = string
 }
+
+# --- API Gateway / Entra ID JWT Authorizer -----------------------------------
+
+variable "entra_tenant_id" {
+  description = "Tenant ID de Microsoft Entra ID. Sin default: cada entorno/tenant debe pasarlo explícitamente en terraform.tfvars."
+  type        = string
+}
+
+variable "entra_audience" {
+  description = "Audience(s) del JWT esperado por el authorizer (client ID / URI de scope de la App Registration de la API). Sin default: debe pasarse explícitamente."
+  type        = list(string)
+}

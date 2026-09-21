@@ -91,4 +91,6 @@ module "api_gateway" {
   subnet_ids        = module.vpc.private_app_subnet_ids
   security_group_id = module.security_groups.vpc_link_security_group_id
   nlb_listener_arn  = module.nlb.listener_arn
+  entra_tenant_id   = var.entra_tenant_id
+  entra_audience    = var.entra_audience
 }

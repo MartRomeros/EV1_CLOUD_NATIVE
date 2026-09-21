@@ -7,3 +7,8 @@ output "api_id" {
   description = "ID de la API."
   value       = aws_apigatewayv2_api.this.id
 }
+
+output "authorizer_id" {
+  description = "ID del JWT Authorizer (Entra ID) asociado al HTTP API."
+  value       = aws_apigatewayv2_authorizer.entra_jwt.id
+}

@@ -31,6 +31,7 @@ Durante la integración salieron 3 problemas no obvios, específicos de este sta
 1. **`MsalService.loginRedirect()`/`logoutRedirect()` devuelven un Observable**, no una Promise ni un valor void. Si no se hace `.subscribe()`, MSAL nunca ejecuta nada (el click "no hacía nada"). Arreglado en [`login.component.ts`](src/app/pages/login/login.component.ts) y [`app.component.ts`](src/app/app.component.ts).
 2. **Proveer `MsalGuard`/`MsalBroadcastService` dos veces** (una vía `importProvidersFrom(MsalModule)` y otra manualmente en el array de `providers`) puede crear una segunda instancia de `MsalBroadcastService` que nunca recibe el reset de `InteractionStatus`, dejando componentes como el de login pegados en estado "Startup" para siempre. Se sacaron los duplicados de [`app.config.ts`](src/app/app.config.ts) — `MsalModule` ya provee ambos.
 3. **`NgZone` arrancaba en modo `NoopNgZone`** (detección de cambios "noop") a pesar de tener `zone.js` cargado como polyfill, porque faltaba el provider `provideZoneChangeDetection({ eventCoalescing: true })` en `app.config.ts` (lo agrega automáticamente `ng new`, pero como se armó el proyecto a mano no estaba). Sin esto, los datos se actualizaban correctamente en los componentes pero la vista nunca se refrescaba sola (había que forzar `ChangeDetectorRef.detectChanges()` a mano para verlo). Ya está agregado; además se dejaron llamadas explícitas a `detectChanges()` en los componentes que reaccionan a eventos de MSAL/HTTP como defensa extra.
+4. **Doble click en "Iniciar sesión" causaba `ClientAuthError: state_mismatch`**: el guard contra doble-click en [`login.component.ts`](src/app/pages/login/login.component.ts) dependía únicamente de `loginInProgress`, actualizado de forma asíncrona por el broadcast `inProgress$` de `MsalBroadcastService`. En la ventana de milisegundos antes de que ese evento llegara, un segundo click disparaba un segundo `loginRedirect()` que sobreescribía en `sessionStorage` el `state`/nonce de la primera petición justo antes de que el navegador terminara de redirigir con el `state` original — al volver de Entra ID, el `state` ya no coincidía. Arreglado marcando `loginInProgress = true` de forma síncrona dentro del propio `click`, antes de esperar el broadcast.
 
 ## Requisitos
 
@@ -100,6 +101,13 @@ src/
 - **MsalGuard** protege `/ordenes`, `/ordenes/nueva` y `/ordenes/:id`: si alguien intenta entrar directo por URL sin sesión, dispara el login automáticamente (`app.routes.ts`).
 - **MsalInterceptor** adjunta el bearer token a cada request HTTP cuya URL matchee `protectedResourceMap` (configurado en `auth/msal.config.ts` con el scope del API Gateway).
 - Los roles de aplicación (App Roles de Entra ID) se leen desde los claims del ID token vía `getRolesFromAccount()` y se muestran en el header.
+
+### Roles: qué existe hoy y qué no
+
+- **No hay `RoleGuard` ni ningún tipo de autorización por rol en el frontend.** `getRolesFromAccount()` solo lee el claim `roles` del ID token para mostrarlo como texto en el header (`app.component.html`); ese valor no se usa en ningún `canActivate`, `*ngIf`/`@if` ni lógica condicional.
+- Las rutas `admin/clientes`, `admin/catalogo` y `admin/usuarios` no llevan guard (`app.routes.ts`): son alcanzables por **cualquier usuario autenticado**, sin importar qué rol (o ninguno) tenga asignado en Entra ID. `MsalGuard` solo verifica que haya sesión, no el rol.
+- El `RolUsuario` (`'admin' | 'mecanico' | 'recepcion'`) de `core/models/usuario.model.ts` es exclusivamente un campo del **mock** `UsuariosService` (pantalla de demostración en memoria) — no representa ni aplica ninguna restricción real; es solo el dato que se lista/edita en esa tabla de ejemplo.
+- La asignación real de roles vive en **App Roles de Entra ID** (portal de Azure), y la intención documentada en la sección "Guía paso a paso" de abajo es que la **autorización se aplique en el backend/BFF** (401/403 leyendo el claim `roles` del JWT), no en el frontend. Si se necesita ocultar/bloquear vistas por rol en la SPA, hoy no existe ese mecanismo y habría que construirlo (un `RoleGuard` que lea `getRolesFromAccount()`).
 
 ## Deploy (Docker en AWS EC2 + Nginx Reverse Proxy y Certbot SSL)
 

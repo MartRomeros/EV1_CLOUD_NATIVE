@@ -45,11 +45,22 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Determinar nombre del repositorio de Docker Hub
+        id: repo-frontend
+        run: |
+          REPO="${{ secrets.DOCKERHUB_REPO_FRONTEND }}"
+          if [ -z "$REPO" ]; then
+            REPO="${{ secrets.DOCKERHUB_USERNAME }}/tallerpro360-frontend"
+          elif [[ "$REPO" != *"/"* ]]; then
+            REPO="${{ secrets.DOCKERHUB_USERNAME }}/$REPO"
+          fi
+          echo "image=$REPO" >> $GITHUB_OUTPUT
+
       - name: Generar metadatos y etiquetas para Frontend
         id: meta-frontend
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/tallerpro360-frontend
+          images: ${{ steps.repo-frontend.outputs.image }}
           tags: |
             type=raw,value=latest
             type=sha,format=short
@@ -87,11 +98,22 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Determinar nombre del repositorio de Docker Hub
+        id: repo-backend
+        run: |
+          REPO="${{ secrets.DOCKERHUB_REPO_BACKEND }}"
+          if [ -z "$REPO" ]; then
+            REPO="${{ secrets.DOCKERHUB_USERNAME }}/tallerpro360-backend"
+          elif [[ "$REPO" != *"/"* ]]; then
+            REPO="${{ secrets.DOCKERHUB_USERNAME }}/$REPO"
+          fi
+          echo "image=$REPO" >> $GITHUB_OUTPUT
+
       - name: Generar metadatos y etiquetas para Backend
         id: meta-backend
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/tallerpro360-backend
+          images: ${{ steps.repo-backend.outputs.image }}
           tags: |
             type=raw,value=latest
             type=sha,format=short

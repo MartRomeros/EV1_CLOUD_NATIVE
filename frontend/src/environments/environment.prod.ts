@@ -2,9 +2,9 @@
 // Reemplaza environment.ts via fileReplacements en angular.json.
 export const environment = {
   production: true,
-  azureClientId: '00000000-0000-0000-0000-000000000000',
-  azureTenantId: '00000000-0000-0000-0000-000000000000',
+  azureClientId: '952083c2-4584-4dec-a3d3-5b0077da3e8f',
+  azureTenantId: '639a8b7f-479a-4d37-9418-bad57badccb1',
   redirectUri: 'https://app.martin-romero.cl',
-  apiScope: 'api://00000000-0000-0000-0000-000000000000/access_as_user',
-  apiUrl: 'https://TU-API-ID.execute-api.TU-REGION.amazonaws.com',
+  apiScope: 'api://952083c2-4584-4dec-a3d3-5b0077da3e8f/access_as_user',
+  apiUrl: 'https://api.martin-romero.cl', // o URL de EC2 backend / API Gateway
 };

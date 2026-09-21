@@ -32,8 +32,10 @@ export function MSALInstanceFactory(): IPublicClientApplication {
     system: {
       loggerOptions: {
         loggerCallback,
-        logLevel: LogLevel.Warning,
-        piiLoggingEnabled: false,
+        // Temporal: Verbose + PII para diagnosticar ClientAuthError: state_mismatch.
+        // Volver a LogLevel.Warning / piiLoggingEnabled: false una vez resuelto.
+        logLevel: LogLevel.Verbose,
+        piiLoggingEnabled: true,
       },
     },
   });

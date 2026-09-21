@@ -19,6 +19,12 @@ El backend interactúa principalmente con las siguientes tablas del esquema `tal
 - `OT_EVENT`: Registro histórico de eventos (ej. evento `OtCreada`).
 - `NOTIFY_LOG`: Registro de notificaciones enviadas a clientes.
 
+## 🔒 Autenticación y roles
+
+**No hay ninguna.** El backend actual (`src/app.js`, `src/routes/`) no valida bearer tokens ni aplica autorización por rol: no hay middleware JWT, no hay dependencias de auth en `package.json` (`cors`, `dotenv`, `express`, `pg`, `uuid` — nada de `passport`/`jsonwebtoken`/similar), y ningún endpoint bajo `/ot` o `/resumen` chequea sesión ni rol. Cualquiera con acceso de red al puerto puede leer, crear, modificar o borrar cualquier OT.
+
+El frontend (`frontend/README.md`) sí lee roles desde los claims del ID token de Entra ID (App Roles) y documenta la intención de validar JWT + autorización por rol (401/403) en un futuro backend/BFF (ver ahí la guía "Filtro de validación JWT (BFF)") — pero eso es una brecha pendiente, no algo que este backend implemente hoy. Si se conecta este backend tal cual al frontend, cualquier usuario autenticado en Entra ID (o directamente cualquiera que llame a la API sin pasar por el frontend) tiene acceso total, sin distinción de rol.
+
 ## 🛠️ Requisitos
 - **Docker** y **Docker Compose** instalados en tu computadora.
 - **PostgreSQL** corriendo y la base de datos `DB_CLOUD` inicializada (el backend levanta las tablas en su inicialización si no existen, buscando primero en el esquema `tallerpro360`).

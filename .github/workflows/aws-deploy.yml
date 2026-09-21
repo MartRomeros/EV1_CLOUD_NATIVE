@@ -63,7 +63,13 @@ jobs:
         run: |
           INSTANCE_ID="${{ secrets.AWS_EC2_FRONTEND_INSTANCE_ID }}"
           DOCKER_USER="${{ secrets.DOCKERHUB_USERNAME }}"
-          IMAGE="${DOCKER_USER}/tallerpro360-frontend:latest"
+          REPO="${{ secrets.DOCKERHUB_REPO_FRONTEND }}"
+          if [ -z "$REPO" ]; then
+            REPO="${DOCKER_USER}/tallerpro360-frontend"
+          elif [[ "$REPO" != *"/"* ]]; then
+            REPO="${DOCKER_USER}/$REPO"
+          fi
+          IMAGE="${REPO}:latest"
 
           echo "Preparando script de despliegue para EC2 Frontend ($INSTANCE_ID)..."
 
@@ -168,7 +174,13 @@ jobs:
         run: |
           INSTANCE_ID="${{ secrets.AWS_EC2_BACKEND_INSTANCE_ID }}"
           DOCKER_USER="${{ secrets.DOCKERHUB_USERNAME }}"
-          IMAGE="${DOCKER_USER}/tallerpro360-backend:latest"
+          REPO="${{ secrets.DOCKERHUB_REPO_BACKEND }}"
+          if [ -z "$REPO" ]; then
+            REPO="${DOCKER_USER}/tallerpro360-backend"
+          elif [[ "$REPO" != *"/"* ]]; then
+            REPO="${DOCKER_USER}/$REPO"
+          fi
+          IMAGE="${REPO}:latest"
 
           echo "Preparando script de despliegue para EC2 Backend ($INSTANCE_ID)..."
 

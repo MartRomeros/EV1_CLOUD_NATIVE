@@ -17,3 +17,13 @@ variable "nlb_listener_arn" {
   description = "ARN del listener del NLB al que apunta la integración."
   type        = string
 }
+
+variable "entra_tenant_id" {
+  description = "Tenant ID de Microsoft Entra ID usado para construir el issuer del JWT Authorizer. Sin default: debe pasarse explícitamente."
+  type        = string
+}
+
+variable "entra_audience" {
+  description = "Audience(s) esperado en el claim \"aud\" del JWT (client ID o URI de scope de la App Registration). Sin default: debe pasarse explícitamente."
+  type        = list(string)
+}

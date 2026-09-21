@@ -10,6 +10,7 @@ export const pool = new Pool({
   password: ENV.POSTGRES_PASSWORD,
   port: ENV.POSTGRES_PORT,
   options: `-c search_path=${ENV.SEARCH_PATH}`,
+  ssl: ENV.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 export default pool;

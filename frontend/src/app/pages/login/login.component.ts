@@ -42,10 +42,16 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (this.loginInProgress) {
       return;
     }
+    // Se marca en progreso de forma sincronica: el broadcast de MsalBroadcastService
+    // (inProgress$) tarda unos milisegundos en emitir, y en esa ventana un doble click
+    // dispara un segundo loginRedirect() que sobreescribe el "state" cacheado del primero,
+    // causando ClientAuthError: state_mismatch al volver de Entra ID.
+    this.loginInProgress = true;
     this.error = null;
     this.msalService.loginRedirect(loginRequest).subscribe({
       error: (err) => {
         this.error = err instanceof Error ? err.message : 'No se pudo iniciar sesión.';
+        this.loginInProgress = false;
         this.cdr.detectChanges();
       },
     });

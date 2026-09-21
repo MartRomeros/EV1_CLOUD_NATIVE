@@ -36,3 +36,14 @@ frontend_domain = "app.ejemplo.cl"
 
 # certbot_email: email real de contacto para el registro ACME de Let's Encrypt.
 certbot_email = "tu-correo@ejemplo.cl"
+
+# --- API Gateway / Entra ID JWT Authorizer ------------------------------------
+# entra_tenant_id: Tenant ID de la App Registration de Entra ID (Azure Portal
+# -> Microsoft Entra ID -> Overview -> Tenant ID). Ejemplo del tenant actual
+# del proyecto (manuelcarvajalapp): "639a8b7f-479a-4d37-9418-bad57badccb1".
+entra_tenant_id = "TU-TENANT-ID"
+
+# entra_audience: client ID y/o URI de scope de la App Registration de la API
+# (ver frontend/src/environments/environment.ts -> apiScope). Ejemplo:
+# ["api://952083c2-4584-4dec-a3d3-5b0077da3e8f"]
+entra_audience = ["TU-AUDIENCE"]
